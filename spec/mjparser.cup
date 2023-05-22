@@ -1,0 +1,115 @@
+package rs.ac.bg.etf.pp1;
+
+import java_cup.runtime.*;
+import org.apache.log4j.*;
+import rs.ac.bg.etf.pp1.ast.*;
+
+
+parser code {:
+	Logger log = Logger.getLogger(getClass());
+
+	// redefined methods to print error messages
+
+	public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+		done_parsing();
+		report_error(message, info);
+	}
+
+	public void syntax_error(Symbol cur_token) {
+		report_error("Syntax error", cur_token);
+	}
+
+	public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+		report_fatal_error("Unrecoverable syntax error", cur_token);
+	}
+
+	public void report_error(String message, Object info) {
+		if (info instanceof Symbol) message += " on line " + ((Symbol) info).left;
+
+		log.error(message);
+	}
+:}
+
+scan with {:
+	Symbol s = this.getScanner().next_token();
+
+	if (s != null && s.value != null) log.info(s.toString() + " " + s.value.toString());
+
+	return s;
+:}
+
+terminal PROG, IDENT, LBRACE, RBRACE, SEMI, LPAREN, RPAREN, EQUAL, RETURN, PRINT, COMMA, PLUS;
+terminal Integer NUMBER;
+terminal String IDENT;
+
+nonterminal Program, VarDeclList, MethodDeclList, Type, VarDecl, MethodDecl, FormPars, StatementList, FormalParamlist, FormalParamDecl, Statement, Designator, Expr, Term, Addop, Factor, ActualPars, ActualParamList;
+
+Program ::= (Program) PROG IDENT VarDeclList LBRACE MethodDeclList RBRACE;
+
+VarDeclList ::=	(VarDeclarations) VarDeclList VarDecl
+				|
+				(NoVarDecl) /* epsilon */
+				;
+
+VarDecl ::=	(VarDecl) Type:varType IDENT:varName SEMI;
+
+Type ::= (Type) IDENT:typeName;
+
+MethodDeclList ::= (MethodDeclarations) MethodDeclList MethodDecl
+					|
+					(NoMethodDecl) /* epsilon */
+					;
+
+MethodDecl ::= Type:retType IDENT:methodName LP FormPars RPAREN VarDeclList LBRACE StatementList RBRACE;
+
+FormPars ::= (FormParams) FormalParamList
+			|
+			(NoFormParams) /* epsilon */
+			;
+
+FormalParamList ::= (FormalParamDecls) FormalParamList COMMA FormalParamDecl
+					|
+					(SingleFormalParamDecl) FormalParamDecl
+					;
+
+StatementList ::= (Statements) StatementList Statement
+				|
+				(NoStatement) /* epsilon */
+				;
+
+Statement ::= (Assignment) Designator:dest EQUAL Expr:e SEMI
+				|
+				(PrintStmt) PRINT LPAREN Expr RPAREN SEMI
+				|
+				(ReturnExpr) RETURN Expr SEMI
+				|
+				(ReturNoExpr) RETURN SEMI
+				;
+
+Expr ::= (AddExpr) Expr:te Addop Term:t
+		|
+		(TermExpr) Term:t
+		;
+
+Term ::= (Term) Factor:t;
+
+Factor ::= (Const) NUMBER
+			|
+			(Var) Designator:d
+			|
+			(FuncCall) Designator:func LPAREN ActualPars RPAREN
+			;
+
+ActualPars ::= (Actuals) ActualParamList
+				|
+				(NoActuals) /* epsilon */
+				;
+
+ActualParamList ::= (ActualParams) ActualParamList COMMA Expr
+					|
+					(ActualParam) Expr
+					;
+
+Designator ::= (Designator) IDENT:name;
+
+Addop ::= (Addop) PLUS;
