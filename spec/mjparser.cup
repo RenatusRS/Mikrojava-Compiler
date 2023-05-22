@@ -38,7 +38,7 @@ scan with {:
 	return s;
 :}
 
-terminal PROG, LBRACE, RBRACE, SEMI, LPAREN, RPAREN, EQUAL, RETURN, PRINT, COMMA, PLUS, IF, ELSE;
+terminal PROG, LBRACE, RBRACE, SEMI, LPAREN, RPAREN, EQUAL, RETURN, PRINT, COMMA, PLUS, IF, ELSE, VOID;
 terminal Integer NUMBER;
 terminal String IDENT;
 

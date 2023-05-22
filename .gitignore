@@ -30,3 +30,4 @@ src/rs/ac/bg/etf/pp1/Yylex.java
 spec/mjparser_astbuild.cup
 src/rs/ac/bg/etf/pp1/MJParser.java
 /out/
+/src/rs/ac/bg/etf/pp1/ast/
