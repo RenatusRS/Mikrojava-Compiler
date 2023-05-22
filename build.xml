@@ -22,7 +22,7 @@
             <arg value="-destdir"/>
             <arg value="src/rs/ac/bg/etf/pp1"/>
             <arg value="-ast"/>
-            <arg value="rs.ac.bg.etf.pp1.ast"/>
+            <arg value="src.rs.ac.bg.etf.pp1.ast"/>
             <arg value="-parser"/>
             <arg value="MJParser"/>
             <arg value="-buildtree"/>
@@ -30,7 +30,11 @@
         </java>
     </target>
 
-    <target name="compile" depends="parserGen">
+    <target name="repackage" depends="parserGen">
+        <replace dir="src" value="rs.ac.bg.etf.pp1" token="src.rs.ac.bg.etf.pp1" summary="true"/>
+    </target>
+
+    <target name="compile" depends="repackage">
         <javac srcdir="src/rs/ac/bg/etf/pp1" includeantruntime="false">
             <classpath>
                 <pathelement location="lib/JFlex.jar"/>
