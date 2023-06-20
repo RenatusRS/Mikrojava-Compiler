@@ -5,7 +5,7 @@ import rs.ac.bg.etf.pp1.ast.VisitorAdaptor;
 
 import org.apache.log4j.Logger;
 
-public class RuleVisitor extends VisitorAdaptor {
+public class SemanticPass extends VisitorAdaptor {
 	Logger log = Logger.getLogger(MJParser.class);
 	
 	int printCallCount = 0;

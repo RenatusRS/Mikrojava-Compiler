@@ -2,7 +2,6 @@ package rs.ac.bg.etf.pp1;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -42,7 +41,7 @@ public class MJParserTest {
 			log.info("===================================");
 
 			// ispis prepoznatih programskih konstrukcija
-			RuleVisitor v = new RuleVisitor();
+			SemanticPass v = new SemanticPass();
 			prog.traverseBottomUp(v); 
 	      
 			log.info(" Print count calls = " + v.printCallCount);
