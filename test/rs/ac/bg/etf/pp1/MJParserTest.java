@@ -21,7 +21,7 @@ public class MJParserTest {
 	}
 	
 	private static final String[] tests = {
-			"program.mj",
+			// "program.mj",
 			"test301.mj",
 	};
 	

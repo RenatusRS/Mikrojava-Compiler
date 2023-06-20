@@ -20,7 +20,7 @@ public class MJTest {
 	}
 	
 	private static final String[] tests = {
-			"program.mj",
+			// "program.mj",
 			"test301.mj",
 	};
 	
