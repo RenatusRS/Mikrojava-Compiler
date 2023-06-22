@@ -39,7 +39,6 @@ scan with {:
 :}
 
 terminal PROG, BREAK, CLASS, ELSE, CONST, IF, WHILE, NEW, PRINT, READ, RETURN, VOID, EXTENDS, CONTINUE, MAP;
-terminal BOOL, CHAR;
 terminal PLUS, MINUS, MUL, DIV, MOD;
 terminal EQUAL, NOT_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL;
 terminal AND, OR;
@@ -64,7 +63,7 @@ nonterminal IfStatement, WhileStatement, ReturnStatement, PrintStatement;
 nonterminal ActPars, ActParsList;
 nonterminal Condition, CondTerm, CondFact;
 nonterminal Expr, Term, Factor;
-nonterminal Type, ReturnType;
+nonterminal Type, ReturnTypes;
 nonterminal Label;
 nonterminal AssignOp, RelOp, AddOp, MulOp;
 
@@ -74,7 +73,7 @@ ProgDeclList ::= ProgDeclList ProgDecl
 	| ;
 
 ProgDecl ::= CONST Type ConstDeclList SEMI
-	| Type VarDeclList SEMI,
+	| Type VarDeclList SEMI
 	| ClassDecl;
 // EXAMPLE: const int a = 5, b = 6, c = 7; int a, b, c; class A extends B { ... }
 
@@ -223,7 +222,7 @@ CondFact ::= Expr RelOp Expr;
 // EXPRESSIONS
 
 Expr ::= Term
-	| Expr AddOp Term,
+	| Expr AddOp Term
 	| MINUS Term;
 // EXAMPLE: 5 # 5 + 6 # -5
 
