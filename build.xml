@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="MJCompiler" default="compile" basedir=".">
+<project name="MJCompiler" default="repackage" basedir=".">
 
     <target name="clean">
         <delete>

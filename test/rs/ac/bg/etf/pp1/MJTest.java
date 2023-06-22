@@ -22,6 +22,7 @@ public class MJTest {
 	private static final String[] tests = {
 			// "program.mj",
 			"test301.mj",
+			"test302.mj",
 	};
 	
 	public static void main(String[] args) throws IOException {
