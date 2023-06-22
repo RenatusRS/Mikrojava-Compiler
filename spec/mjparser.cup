@@ -38,98 +38,250 @@ scan with {:
 	return s;
 :}
 
-terminal PROG, LBRACE, RBRACE, SEMI, LPAREN, RPAREN, EQUAL, RETURN, PRINT, COMMA, PLUS, IF, ELSE, VOID;
+terminal PROG, BREAK, CLASS, ELSE, CONST, IF, WHILE, NEW, PRINT, READ, RETURN, VOID, EXTENDS, CONTINUE, MAP;
+terminal BOOL, CHAR;
+terminal PLUS, MINUS, MUL, DIV, MOD;
+terminal EQUAL, NOT_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL;
+terminal AND, OR;
+terminal ASSIGN;
+terminal INC, DEC;
+terminal SEMI, COLON, COMMA, DOT;
+terminal LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE;
+terminal LAMBDA;
+
 terminal Integer NUMBER;
 terminal String IDENT;
+terminal Bool BOOL;
+terminal Character CHAR;
 
-nonterminal Program, VarDeclList, MethodDeclList, VarDecl, Type, MethodDecl;
-nonterminal FormPars, StatementList, FormalParamList, FormalParamDecl, Statement;
-nonterminal Designator, Expr, Term, Addop, Factor, ActualPars, ActualParamList;
-nonterminal Matched, Unmatched;
+nonterminal Program, ProgDeclList, ProgDecl;
+nonterminal ConstDeclList, ConstDecl, ConstValue;
+nonterminal VarDeclList, VarDecl;
+nonterminal ClassDecl, ConstructorDecl;
+nonterminal MethodDeclList, MethodDecl, FormPars, FormParsList, FormPar;
+nonterminal StatementList, Statement, DesignatorStatement, Designator;
+nonterminal IfStatement, WhileStatement, ReturnStatement, PrintStatement;
+nonterminal ActPars, ActParsList;
+nonterminal Condition, CondTerm, CondFact;
+nonterminal Expr, Term, Factor;
+nonterminal Type, ReturnType;
+nonterminal Label;
+nonterminal AssignOp, RelOp, AddOp, MulOp;
 
-Program ::= (Program) PROG IDENT VarDeclList LBRACE MethodDeclList RBRACE;
+Program ::= PROG IDENT ProgDeclList LBRACE MethodDeclList RBRACE;
 
-VarDeclList ::=	(VarDeclarations) VarDeclList VarDecl
-				|
-				(NoVarDecl) /* epsilon */
-				;
+ProgDeclList ::= ProgDeclList ProgDecl
+	| ;
 
-VarDecl ::=	(VarDecl) Type:varType IDENT:varName SEMI;
-
-Type ::= (Type) IDENT:typeName;
-
-MethodDeclList ::= (MethodDeclarations) MethodDeclList MethodDecl
-				|
-				(NoMethodDecl) /* epsilon */
-				;
-
-MethodDecl ::= (MethodDecl) Type:retType IDENT:methName LPAREN FormPars RPAREN VarDeclList LBRACE StatementList RBRACE;
+ProgDecl ::= CONST Type ConstDeclList SEMI
+	| Type VarDeclList SEMI,
+	| ClassDecl;
+// EXAMPLE: const int a = 5, b = 6, c = 7; int a, b, c; class A extends B { ... }
 
 
-FormPars ::= (FormParams) FormalParamList
-		  |
-		  (NoFormParam) /* epsilon */
-		  ;
-		  
-FormalParamList ::= (FormalParamDecls) FormalParamList COMMA FormalParamDecl
-				|
-				(SingleFormalParamDecl) FormalParamDecl
-				;
+// CONST DECLARATION LIST
 
-StatementList ::= (Statements) StatementList Statement
-				|
-				(NoStmt) /* epsilon */
-				;
-				
-Statement ::= (MatchedStmt) Matched
-		   |
-		   (UnmatchedStmt) Unmatched
-		   ; 
+ConstDeclList ::= ConstDeclList COMMA ConstDecl
+	| ConstDecl;
+// EXAMPLE: a = 5, b = 6, c = 7 # a = 5
 
-Unmatched ::= (UnmatchedIf) IF Expr Statement
-		 	|
-		 	(UnmatchedIfElse) IF Expr Matched ELSE Unmatched
-		 	;
-		 
+ConstDecl ::= IDENT ASSIGN ConstValue;
+// EXAMPLE: a = 5
 
-Matched ::= (Assignment) Designator:dest EQUAL Expr:e SEMI
-		   |
-		   (ErrorStmt) error SEMI:l
-		   {: parser.report_error("Izvrsen oporavak do ; u liniji " + lleft, null);  :}
-		   |
-		   (PrintStmt) PRINT LPAREN Expr RPAREN SEMI
-		   |
-		   (ReturnExpr) RETURN Expr:t SEMI
-		   |
-		   (ReturnNoExpr) RETURN SEMI
-		   |
-		   (MatchedStatement) IF Expr Matched ELSE Matched
-		   ;
-			
-Expr ::= (AddExpr) Expr:te Addop Term:t
-	 |
-	 (TermExpr) Term:t
-	 ;
+ConstValue ::= NUMBER
+	| CHAR
+	| BOOL;
+// EXAMPLE: 5 # 'a' # true
 
-Term ::= (Term) Factor:t;
 
-Factor ::= (Const) NUMBER
-		|
-		(Var) Designator:d
-		| 
-		(FuncCall) Designator:func LPAREN ActualPars RPAREN
-		;
-		
-ActualPars ::= (Actuals) ActualParamList
-			|
-			(NoActuals) /* epsilon */
-			;
-		
-ActualParamList ::= (ActualParams) ActualParamList COMMA Expr
-				|
-				(ActualParam) Expr
-				;
-				
-Designator ::= (Designator) IDENT:name;
+// VAR DECLARATION LIST
 
-Addop ::= (Addop) PLUS;
+VarDeclList ::= VarDeclList COMMA VarDecl
+	| VarDecl;
+// EXAMPLE: a, b[], c # a
+
+VarDecl ::= IDENT
+	| IDENT LBRACKET RBRACKET
+	| IDENT LBRACKET RBRACKET LBRACKET RBRACKET;
+// EXAMPLE: a # b[] # c[][]
+
+
+// CLASS DECLARATION
+
+ClassDecl ::= CLASS IDENT EXTENDS IDENT LBRACE RBRACE; // TODO add class body between braces
+// EXAMPLE: class A extends B { ... }
+
+ConstructorDecl ::= IDENT LPAREN FormPars RPAREN VarDeclList LBRACE StatementList RBRACE;
+// EXAMPLE: A() { ... }
+
+
+// METHOD DECLARATION LIST
+
+MethodDeclList ::= MethodDeclList MethodDecl
+	| MethodDecl
+	| ;
+// EXAMPLE: int a() { ... }, void b() { ... } # int a() { ... } # {{empty}}
+
+MethodDecl ::= ReturnType IDENT LPAREN FormPars RPAREN VarDeclList LBRACE StatementList RBRACE;
+// EXAMPLE: int a() int b, b[] { ... }
+
+FormPars ::= FormParsList
+	| ;
+// EXAMPLE: int a, int b, int c # {{empty}}
+
+FormParsList ::= FormParsList COMMA FormPar
+	| FormPar;
+// EXAMPLE: int a, int b, int c # int a
+
+FormPar ::= Type IDENT
+	| Type IDENT LBRACKET RBRACKET
+	| Type IDENT LBRACKET RBRACKET LBRACKET RBRACKET;
+// EXAMPLE: int a # int b[] # int c[][]
+
+
+// STATEMENT LIST
+
+StatementList ::= StatementList Statement
+	| Statement
+	| ;
+// EXAMPLE: a = 5; b = 6; c = 7; # a = 5; # {{empty}}
+
+Statement ::= DesignatorStatement SEMI
+	| IfStatement
+	| ReturnStatement SEMI
+	| PrintStatement SEMI
+	| WhileStatement
+	| READ LPAREN Designator RPAREN SEMI
+	| BREAK SEMI
+    | CONTINUE SEMI;
+	// | LBRACE StatementList RBRACE; // TODO check if this is correct
+// EXAMPLES:
+//   a = 5;
+//   if (a == 5) a = 6;
+//   return a;
+//   print(a);
+//   while (a == 5) a = 6;
+//   read(a);
+//   break;
+//   continue;
+//   // { a = 5; b = 6; c = 7; }
+
+// DESIGNATOR STATEMENT
+DesignatorStatement ::= Designator AssignOp Expr
+	| Designator INC
+	| Designator DEC
+	| Designator LPAREN ActPars RPAREN;
+// EXAMPLE: a = 5; # a++; # a--; # a(b, c, d);
+
+Designator ::= IDENT
+	| IDENT LBRACKET Expr RBRACKET
+	| IDENT LBRACKET Expr RBRACKET LBRACKET Expr RBRACKET; // TODO add class field access
+// EXAMPLE: a # a[5] # a[5][6]
+
+// OTHER STATEMENTS
+
+IfStatement ::= IF LPAREN Condition RPAREN Statement
+	| IF LPAREN Condition RPAREN LBRACE StatementList RBRACE
+	| IF LPAREN Condition RPAREN Statement ELSE Statement
+	| IF LPAREN Condition RPAREN LBRACE StatementList RBRACE ELSE Statement
+	| IF LPAREN Condition RPAREN Statement ELSE LBRACE StatementList RBRACE
+	| IF LPAREN Condition RPAREN LBRACE StatementList RBRACE ELSE LBRACE StatementList RBRACE;
+// EXAMPLES:
+//   if (a == 5) a = 6;
+//   if (a == 5) { a = 6; b = 7; }
+//   if (a == 5) a = 6; else a = 7;
+//   if (a == 5) { a = 6; b = 7; } else a = 8;
+//   if (a == 5) a = 6; else { a = 7; b = 8; }
+//   if (a == 5) { a = 6; b = 7; } else { a = 7; b = 8; }
+
+
+ReturnStatement ::= RETURN Expr
+	| RETURN;
+// EXAMPLE: return a # return
+
+PrintStatement ::= PRINT LPAREN Expr RPAREN
+	| PRINT LPAREN Expr COMMA NUMBER RPAREN;
+// EXAMPLE: print(a) # print(a, 5)
+
+WhileStatement ::= WHILE LPAREN Condition RPAREN Statement
+	| WHILE LPAREN Condition RPAREN LBRACE StatementList RBRACE;
+// EXAMPLE: while (a == 5) a = 6; # while (a == 5) { a = 6; b = 7; }
+
+
+// CONDITIONS
+Condition ::= CondTerm
+	| CondTerm OR Condition;
+// EXAMPLE: a == 5 # a == 5 || b == 6
+
+CondTerm ::= CondFact
+	| CondFact AND CondTerm;
+// EXAMPLE: a == 5 # a == 5 && b == 6
+
+CondFact ::= Expr RelOp Expr;
+// EXAMPLE: a == 5
+
+// EXPRESSIONS
+
+Expr ::= Term
+	| Expr AddOp Term,
+	| MINUS Term;
+// EXAMPLE: 5 # 5 + 6 # -5
+
+Term ::= Factor
+	| Term MulOp Factor;
+// EXAMPLE: 5 # 5 * 6 / 7
+
+Factor ::= Designator
+	| NUMBER
+	| CHAR
+	| BOOL
+	| LPAREN Expr RPAREN
+	| Designator LPAREN ActPars RPAREN
+	| NEW Type LBRACKET Expr RBRACKET
+	| NEW Type LBRACKET Expr RBRACKET LBRACKET Expr RBRACKET
+	| NEW Type LPAREN ActPars RPAREN;
+// EXAMPLE: 5 # 'a' # true # (5 + 6) # a(5, 6, 7) # new int[5] # new int[5][6] # new A(5, 6, 7) TODO check this order
+
+// ACTUAL PARAMETERS
+ActPars ::= ActParsList
+	| ;
+// EXAMPLE: 5, 6, 7 # {{empty}}
+
+ActParsList ::= ActParsList COMMA Expr
+	| Expr;
+// EXAMPLE: 5, 6, 7 # 5
+
+
+// TYPE
+Type ::= IDENT;
+// EXAMPLE: int
+
+ReturnTypes ::= Type
+	| VOID;
+// EXAMPLE: int # void
+
+// LABEL
+Label ::= IDENT;
+// EXAMPLE: a
+
+// OPERATIONS
+
+AssignOp ::= ASSIGN;
+// EXAMPLE: =
+
+RelOp ::= EQUAL
+	| NOT_EQUAL
+	| GREATER
+	| GREATER_EQUAL
+	| LESS
+	| LESS_EQUAL;
+// EXAMPLE: == # != # > # >= # < # <=
+
+AddOp ::= PLUS
+	| MINUS;
+// EXAMPLE: + # -
+
+MulOp ::= MUL
+	| DIV
+	| MOD;
+// EXAMPLE: * # / # %

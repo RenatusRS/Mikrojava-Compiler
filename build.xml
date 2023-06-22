@@ -10,7 +10,7 @@
         </delete>
         <delete>
             <fileset dir="spec">
-                <exclude name="mjlexer.lex"/>
+                <exclude name="mjlexer.flex"/>
                 <exclude name="mjparser.cup"/>
             </fileset>
         </delete>
@@ -20,7 +20,7 @@
         <java jar="lib/JFlex.jar" fork="true">
             <arg value="-d"/>
             <arg value="src/rs/ac/bg/etf/pp1"/>
-            <arg value="spec/mjlexer.lex"/>
+            <arg value="spec/mjlexer.flex"/>
         </java>
     </target>
 
