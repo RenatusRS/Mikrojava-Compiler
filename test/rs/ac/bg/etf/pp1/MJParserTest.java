@@ -13,6 +13,9 @@ import org.apache.log4j.xml.DOMConfigurator;
 
 import rs.ac.bg.etf.pp1.ast.Program;
 import rs.ac.bg.etf.pp1.util.Log4JUtils;
+import rs.etf.pp1.symboltable.Tab;
+import rs.etf.pp1.symboltable.concepts.Obj;
+import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class MJParserTest {
 	static {
@@ -21,9 +24,9 @@ public class MJParserTest {
 	}
 	
 	private static final String[] tests = {
-			// "program.mj",
-			"test301.mj",
-			"test302.mj",
+			"program.mj",
+			//"test301.mj",
+			//"test302.mj",
 	};
 	
 	public static void main(String[] args) throws Exception {
@@ -48,12 +51,10 @@ public class MJParserTest {
 				log.info("===================================");
 				
 				// ispis prepoznatih programskih konstrukcija
-				SemanticPass v = new SemanticPass();
+				SemanticAnalyzer v = new SemanticAnalyzer();
 				prog.traverseBottomUp(v);
 				
-				log.info(" Print count calls = " + v.printCallCount);
 				
-				// log.info(" Deklarisanih promenljivih ima = " + v.varDeclCount);
 				
 			} finally {
 				try {

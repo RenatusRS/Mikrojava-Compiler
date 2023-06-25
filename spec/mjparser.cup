@@ -3,6 +3,7 @@ package rs.ac.bg.etf.pp1;
 import java_cup.runtime.*;
 import org.apache.log4j.*;
 import rs.ac.bg.etf.pp1.ast.*;
+import java.lang.reflect.Field;
 
 
 parser code {:
@@ -33,7 +34,19 @@ parser code {:
 scan with {:
 	Symbol s = this.getScanner().next_token();
 
-	if (s != null && s.value != null) log.info(s.toString() + " " + s.value.toString());
+	if (s != null && s.value != null) {
+		Field[] fields = sym.class.getDeclaredFields();
+
+		String name = null;
+		for (Field field : fields) {
+			if (field.getType() == int.class && ("#" + field.getInt(null)).equals(s.toString())) {
+				name = field.getName();
+				break;
+			}
+		}
+
+		log.info(name + " " + s.value);
+	}
 
 	return s;
 :}
@@ -50,31 +63,45 @@ terminal LAMBDA;
 
 terminal Integer NUMBER;
 terminal String IDENT;
-terminal Bool BOOL;
+terminal Boolean BOOL;
 terminal Character CHAR;
 
-nonterminal Program, ProgDeclList, ProgDecl;
-nonterminal ConstDeclList, ConstDecl, ConstValue;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName, Designator;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, ReturnTypes, Factor, MethodVarDecl;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct ConstValue, Term, Expr, CondFact;
+
+nonterminal ProgDeclList, ProgDecl;
+nonterminal ConstDeclList, ConstDecl;
 nonterminal VarDeclList, VarDecl;
 nonterminal ClassDecl, ConstructorDecl;
-nonterminal MethodDeclList, MethodDecl, FormPars, FormParsList, FormPar;
-nonterminal StatementList, Statement, DesignatorStatement, Designator;
-nonterminal IfStatement, WhileStatement, ReturnStatement, PrintStatement;
+nonterminal MethodDeclList, FormPars, FormParsList, FormPar;
+nonterminal StatementList, Statement, DesignatorStatement;
+nonterminal IfStatement, WhileStatement;
 nonterminal ActPars, ActParsList;
-nonterminal Condition, CondTerm, CondFact;
-nonterminal Expr, Term, Factor;
-nonterminal Type, ReturnTypes;
-nonterminal Label;
+nonterminal Condition, CondTerm;
 nonterminal AssignOp, RelOp, AddOp, MulOp;
 
-Program ::= PROG IDENT ProgDeclList LBRACE MethodDeclList RBRACE;
+nonterminal PrintStatementOptional;
+
+nonterminal MethodVars, MethodVar, MethodVarDeclList;
+
+nonterminal ArrayOption, MatrixOption;
+
+nonterminal StatementHelper, ReturnItem;
+nonterminal IfStatementIf, IfStatementElse;
+nonterminal WhileTrigger;
+
+precedence left ELSE;
+
+Program ::= (Program) PROG ProgName:p ProgDeclList LBRACE MethodDeclList RBRACE;
+
+ProgName ::= (ProgName) IDENT:name;
 
 ProgDeclList ::= ProgDeclList ProgDecl
 	| ;
 
-ProgDecl ::= CONST Type ConstDeclList SEMI
-	| Type VarDeclList SEMI
-	| ClassDecl;
+ProgDecl ::= (ProgConstDeclarations) CONST Type:constDecl ConstDeclList SEMI
+	| (ProgVarDeclarations) Type:varDecl VarDeclList SEMI;
 // EXAMPLE: const int a = 5, b = 6, c = 7; int a, b, c; class A extends B { ... }
 
 
@@ -84,12 +111,12 @@ ConstDeclList ::= ConstDeclList COMMA ConstDecl
 	| ConstDecl;
 // EXAMPLE: a = 5, b = 6, c = 7 # a = 5
 
-ConstDecl ::= IDENT ASSIGN ConstValue;
+ConstDecl ::= (ConstDecl) IDENT:name ASSIGN ConstValue;
 // EXAMPLE: a = 5
 
-ConstValue ::= NUMBER
-	| CHAR
-	| BOOL;
+ConstValue ::= (ConstInt) NUMBER
+	| (ConstChar) CHAR
+	| (ConstBool) BOOL;
 // EXAMPLE: 5 # 'a' # true
 
 
@@ -99,30 +126,33 @@ VarDeclList ::= VarDeclList COMMA VarDecl
 	| VarDecl;
 // EXAMPLE: a, b[], c # a
 
-VarDecl ::= IDENT
-	| IDENT LBRACKET RBRACKET
-	| IDENT LBRACKET RBRACKET LBRACKET RBRACKET;
+VarDecl ::= (VarDeclName) IDENT:name
+ 	| (VarDeclArray) IDENT:name LBRACKET RBRACKET
+	| (VarDeclMatrix) IDENT:name LBRACKET RBRACKET LBRACKET RBRACKET;
 // EXAMPLE: a # b[] # c[][]
 
+MethodVars ::= MethodVars MethodVar
+	| ;
 
-// CLASS DECLARATION
+MethodVar ::= Type MethodVarDeclList SEMI;
 
-ClassDecl ::= CLASS IDENT EXTENDS IDENT LBRACE RBRACE; // TODO add class body between braces
-// EXAMPLE: class A extends B { ... }
+MethodVarDeclList ::= MethodVarDeclList COMMA MethodVarDecl
+	| MethodVarDecl;
 
-ConstructorDecl ::= IDENT LPAREN FormPars RPAREN VarDeclList LBRACE StatementList RBRACE;
-// EXAMPLE: A() { ... }
-
+MethodVarDecl ::= (MethodVarName) IDENT:name
+	| (MethodVarArray) IDENT:name LBRACKET RBRACKET
+	| (MethodVarMatrix) IDENT:name LBRACKET RBRACKET LBRACKET RBRACKET;
 
 // METHOD DECLARATION LIST
 
 MethodDeclList ::= MethodDeclList MethodDecl
-	| MethodDecl
 	| ;
 // EXAMPLE: int a() { ... }, void b() { ... } # int a() { ... } # {{empty}}
 
-MethodDecl ::= ReturnType IDENT LPAREN FormPars RPAREN VarDeclList LBRACE StatementList RBRACE;
+MethodDecl ::= (MethodDecl) MethodTypeName LPAREN FormPars RPAREN MethodVars LBRACE StatementList RBRACE;
 // EXAMPLE: int a() int b, b[] { ... }
+
+MethodTypeName ::= (MethodTypeName) ReturnTypes IDENT:name;
 
 FormPars ::= FormParsList
 	| ;
@@ -132,27 +162,26 @@ FormParsList ::= FormParsList COMMA FormPar
 	| FormPar;
 // EXAMPLE: int a, int b, int c # int a
 
-FormPar ::= Type IDENT
-	| Type IDENT LBRACKET RBRACKET
-	| Type IDENT LBRACKET RBRACKET LBRACKET RBRACKET;
+FormPar ::= (FormParVar) Type IDENT:name
+	| (FormParArray) Type IDENT:name LBRACKET RBRACKET
+	| (FormParMatrix) Type IDENT:name LBRACKET RBRACKET LBRACKET RBRACKET;
 // EXAMPLE: int a # int b[] # int c[][]
 
 
 // STATEMENT LIST
 
 StatementList ::= StatementList Statement
-	| Statement
 	| ;
 // EXAMPLE: a = 5; b = 6; c = 7; # a = 5; # {{empty}}
 
-Statement ::= DesignatorStatement SEMI
-	| IfStatement
-	| ReturnStatement SEMI
-	| PrintStatement SEMI
-	| WhileStatement
-	| READ LPAREN Designator RPAREN SEMI
-	| BREAK SEMI
-    | CONTINUE SEMI;
+Statement ::= (DesignatorStmt) DesignatorStatement SEMI
+	| (IfStmt) IfStatement
+	| (ReturnStmt) RETURN ReturnItem SEMI
+	| (PrintStmt) PRINT LPAREN Expr PrintStatementOptional RPAREN SEMI
+	| (WhileStmt) WhileTrigger LPAREN Condition RPAREN StatementHelper
+	| (ReadStmt) READ LPAREN Designator RPAREN SEMI
+	| (BreakStmt) BREAK SEMI
+    | (ContinueStmt) CONTINUE SEMI;
 	// | LBRACE StatementList RBRACE; // TODO check if this is correct
 // EXAMPLES:
 //   a = 5;
@@ -166,25 +195,25 @@ Statement ::= DesignatorStatement SEMI
 //   // { a = 5; b = 6; c = 7; }
 
 // DESIGNATOR STATEMENT
-DesignatorStatement ::= Designator AssignOp Expr
-	| Designator INC
-	| Designator DEC
-	| Designator LPAREN ActPars RPAREN;
+DesignatorStatement ::= (DesignatorStatementAssign) Designator AssignOp Expr
+	| (DesignatorStatementInc) Designator INC
+	| (DesignatorStatementDec) Designator DEC
+	| (DesignatorStatementFunc) Designator LPAREN ActPars RPAREN;
 // EXAMPLE: a = 5; # a++; # a--; # a(b, c, d);
 
-Designator ::= IDENT
-	| IDENT LBRACKET Expr RBRACKET
-	| IDENT LBRACKET Expr RBRACKET LBRACKET Expr RBRACKET; // TODO add class field access
+Designator ::= (DesignatorVar) IDENT:name
+	| (DesignatorArray) IDENT:name LBRACKET Expr RBRACKET
+	| (DesignatorMatrix) IDENT:name LBRACKET Expr RBRACKET LBRACKET Expr RBRACKET; // TODO add class field access
 // EXAMPLE: a # a[5] # a[5][6]
 
 // OTHER STATEMENTS
 
-IfStatement ::= IF LPAREN Condition RPAREN Statement
-	| IF LPAREN Condition RPAREN LBRACE StatementList RBRACE
-	| IF LPAREN Condition RPAREN Statement ELSE Statement
-	| IF LPAREN Condition RPAREN LBRACE StatementList RBRACE ELSE Statement
-	| IF LPAREN Condition RPAREN Statement ELSE LBRACE StatementList RBRACE
-	| IF LPAREN Condition RPAREN LBRACE StatementList RBRACE ELSE LBRACE StatementList RBRACE;
+IfStatementIf ::= IF LPAREN Condition RPAREN StatementHelper;
+
+IfStatementElse ::= ELSE StatementHelper
+	| ;
+
+IfStatement ::= IfStatementIf IfStatementElse;
 // EXAMPLES:
 //   if (a == 5) a = 6;
 //   if (a == 5) { a = 6; b = 7; }
@@ -194,17 +223,18 @@ IfStatement ::= IF LPAREN Condition RPAREN Statement
 //   if (a == 5) { a = 6; b = 7; } else { a = 7; b = 8; }
 
 
-ReturnStatement ::= RETURN Expr
-	| RETURN;
-// EXAMPLE: return a # return
 
-PrintStatement ::= PRINT LPAREN Expr RPAREN
-	| PRINT LPAREN Expr COMMA NUMBER RPAREN;
-// EXAMPLE: print(a) # print(a, 5)
+StatementHelper ::= Statement
+	| LBRACE StatementList RBRACE;
 
-WhileStatement ::= WHILE LPAREN Condition RPAREN Statement
-	| WHILE LPAREN Condition RPAREN LBRACE StatementList RBRACE;
-// EXAMPLE: while (a == 5) a = 6; # while (a == 5) { a = 6; b = 7; }
+WhileTrigger ::= (WhileTrigger) WHILE;
+
+ReturnItem ::= (ReturnItemExpr) Expr
+	| (ReturnItemVoid) ;
+// EXAMPLE: 5 # {{empty}}
+
+PrintStatementOptional ::= COMMA NUMBER
+	| ;
 
 
 // CONDITIONS
@@ -216,30 +246,29 @@ CondTerm ::= CondFact
 	| CondFact AND CondTerm;
 // EXAMPLE: a == 5 # a == 5 && b == 6
 
-CondFact ::= Expr RelOp Expr;
+CondFact ::= (CondFactRel) Expr:exprLeft RelOp:operator Expr:exprRight
+	| (CondFactExpr) Expr;
 // EXAMPLE: a == 5
 
 // EXPRESSIONS
 
-Expr ::= Term
-	| Expr AddOp Term
-	| MINUS Term;
+Expr ::= (ExprTerm) Term
+	| (ExprAdd) Expr AddOp Term
+	| (ExprMinus) MINUS Term
+   	| (ExprMap) Designator DOT MAP LPAREN IDENT:iterator LAMBDA Expr RPAREN;
 // EXAMPLE: 5 # 5 + 6 # -5
 
-Term ::= Factor
-	| Term MulOp Factor;
+Term ::= (TermFactor) Factor
+	| (TermMul) Term MulOp Factor;
 // EXAMPLE: 5 # 5 * 6 / 7
 
-Factor ::= Designator
-	| NUMBER
-	| CHAR
-	| BOOL
-	| LPAREN Expr RPAREN
-	| Designator LPAREN ActPars RPAREN
-	| NEW Type LBRACKET Expr RBRACKET
-	| NEW Type LBRACKET Expr RBRACKET LBRACKET Expr RBRACKET
-	| NEW Type LPAREN ActPars RPAREN;
-// EXAMPLE: 5 # 'a' # true # (5 + 6) # a(5, 6, 7) # new int[5] # new int[5][6] # new A(5, 6, 7) TODO check this order
+Factor ::= (FactorVar) Designator
+	| (FactorConst) ConstValue
+	| (FactorExpression) LPAREN Expr RPAREN
+	| (FactorFuncCall) Designator LPAREN ActPars RPAREN
+	| (FactorArray) NEW Type LBRACKET Expr RBRACKET
+	| (FactorMatrix) NEW Type LBRACKET Expr RBRACKET LBRACKET Expr RBRACKET;
+// EXAMPLE: 5 # 'a' # true # (5 + 6) # a(5, 6, 7) # new int[5] # new int[5][6] TODO check this order
 
 // ACTUAL PARAMETERS
 ActPars ::= ActParsList
@@ -252,35 +281,31 @@ ActParsList ::= ActParsList COMMA Expr
 
 
 // TYPE
-Type ::= IDENT;
+Type ::= (Type) IDENT:typeName;
 // EXAMPLE: int
 
-ReturnTypes ::= Type
-	| VOID;
+ReturnTypes ::= (ReturnType) Type
+	| (ReturnVoid) VOID;
 // EXAMPLE: int # void
-
-// LABEL
-Label ::= IDENT;
-// EXAMPLE: a
 
 // OPERATIONS
 
-AssignOp ::= ASSIGN;
+AssignOp ::= (AssignOp) ASSIGN;
 // EXAMPLE: =
 
-RelOp ::= EQUAL
-	| NOT_EQUAL
-	| GREATER
-	| GREATER_EQUAL
-	| LESS
-	| LESS_EQUAL;
+RelOp ::= (EqualRO) EQUAL
+	| (NotEqualRO) NOT_EQUAL
+	| (GreaterRO) GREATER
+	| (GreaterEqualRO) GREATER_EQUAL
+	| (LessRO) LESS
+	| (LessEqualRO) LESS_EQUAL;
 // EXAMPLE: == # != # > # >= # < # <=
 
-AddOp ::= PLUS
-	| MINUS;
+AddOp ::= (PlusAO) PLUS
+	| (MinusAO) MINUS;
 // EXAMPLE: + # -
 
-MulOp ::= MUL
-	| DIV
-	| MOD;
+MulOp ::= (MulMO) MUL
+	| (DivMO) DIV
+	| (ModMO) MOD;
 // EXAMPLE: * # / # %

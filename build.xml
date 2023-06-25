@@ -5,7 +5,9 @@
         <delete>
             <fileset dir="src/rs/ac/bg/etf/pp1">
                 <exclude name="util/Log4JUtils.java"/>
-                <exclude name="SemanticPass.java"/>
+                <exclude name="SemanticAnalyzer.java"/>
+                <exclude name="Tab.java"/>
+                <exclude name="CodeGenerator.java"/>
             </fileset>
         </delete>
         <delete>
@@ -32,7 +34,7 @@
             <arg value="src.rs.ac.bg.etf.pp1.ast"/>
             <arg value="-parser"/>
             <arg value="MJParser"/>
-            <!-- <arg value="dump_states"/> -->
+            <arg value="-dump_states"/>
             <arg value="-buildtree"/>
             <arg value="spec/mjparser.cup"/>
         </java>

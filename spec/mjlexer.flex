@@ -50,7 +50,8 @@ import java_cup.runtime.Symbol;
 "continue"     { return newSymbol(sym.CONTINUE,      yytext()); }
 "map"          { return newSymbol(sym.MAP,           yytext()); }
 
-"true"|"false" { return newSymbol(sym.BOOL,          yytext()); }
+"true"         { return newSymbol(sym.BOOL,              true); }
+"false"        { return newSymbol(sym.BOOL,             false); }
 
 "+"            { return newSymbol(sym.PLUS,          yytext()); }
 "-"            { return newSymbol(sym.MINUS,         yytext()); }
