@@ -8,6 +8,7 @@
                 <exclude name="SemanticAnalyzer.java"/>
                 <exclude name="Tab.java"/>
                 <exclude name="CodeGenerator.java"/>
+                <exclude name="CounterVisitor.java"/>
             </fileset>
         </delete>
         <delete>
@@ -51,8 +52,39 @@
                 <pathelement location="lib/cup.jar"/>
                 <pathelement location="lib/log4j-1.2.17.jar"/>
                 <pathelement location="lib/symboltable-1-1.jar"/>
+                <pathelement location="lib/mj-runtime-1.1.jar"/>
             </classpath>
         </javac>
+    </target>
+
+    <target name="disasm">
+        <java classname="rs.etf.pp1.mj.runtime.disasm">
+            <arg value="test/program.obj"/>
+            <classpath>
+                <pathelement location="lib/mj-runtime-1.1.jar"/>
+            </classpath>
+        </java>
+    </target>
+
+    <target name="debug" depends="disasm">
+        <java classname="rs.etf.pp1.mj.runtime.Run">
+            <arg value="test/program.obj" />
+            <arg value="-debug" />
+            <redirector input="input.txt" output="output.txt" error="error.txt" alwayslog="true"/>
+            <classpath>
+                <pathelement location="lib/mj-runtime-1.1.jar" />
+            </classpath>
+        </java>
+    </target>
+
+    <target name="run" depends="disasm">
+        <java classname="rs.etf.pp1.mj.runtime.Run">
+            <arg value="test/program.obj" />
+            <redirector input="input.txt" output="output.txt" error="error.txt" alwayslog="true"/>
+            <classpath>
+                <pathelement location="lib/mj-runtime-1.1.jar" />
+            </classpath>
+        </java>
     </target>
 
 </project>

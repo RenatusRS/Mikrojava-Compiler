@@ -13,7 +13,7 @@ import org.apache.log4j.xml.DOMConfigurator;
 
 import rs.ac.bg.etf.pp1.util.Log4JUtils;
 
-public class MJTest {
+public class Lexer {
 	static {
 		DOMConfigurator.configure(Log4JUtils.instance().findLoggerConfigFile());
 		Log4JUtils.instance().prepareLogFile(Logger.getRootLogger());
@@ -26,10 +26,10 @@ public class MJTest {
 	};
 	
 	public static void main(String[] args) throws IOException {
-		Logger log = Logger.getLogger(MJTest.class);
+		Logger log = Logger.getLogger(Lexer.class);
 		Reader br = null;
 		
-		for (String test : MJTest.tests) {
+		for (String test : Lexer.tests) {
 			try {
 				File sourceCode = new File("test/" + test);
 				log.info("Compiling source file: " + sourceCode.getAbsolutePath());

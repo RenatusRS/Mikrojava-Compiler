@@ -68,7 +68,7 @@ terminal Character CHAR;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName, Designator;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, ReturnTypes, Factor, MethodVarDecl;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct ConstValue, Term, Expr, CondFact;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct ConstValue, Term, Expr, CondFact, PrintStatementOptional;
 
 nonterminal ProgDeclList, ProgDecl;
 nonterminal ConstDeclList, ConstDecl;
@@ -80,8 +80,6 @@ nonterminal IfStatement, WhileStatement;
 nonterminal ActPars, ActParsList;
 nonterminal Condition, CondTerm;
 nonterminal AssignOp, RelOp, AddOp, MulOp;
-
-nonterminal PrintStatementOptional;
 
 nonterminal MethodVars, MethodVar, MethodVarDeclList;
 
@@ -177,7 +175,7 @@ StatementList ::= StatementList Statement
 Statement ::= (DesignatorStmt) DesignatorStatement SEMI
 	| (IfStmt) IfStatement
 	| (ReturnStmt) RETURN ReturnItem SEMI
-	| (PrintStmt) PRINT LPAREN Expr PrintStatementOptional RPAREN SEMI
+	| (PrintStmt) PRINT LPAREN PrintStatementOptional RPAREN SEMI
 	| (WhileStmt) WhileTrigger LPAREN Condition RPAREN StatementHelper
 	| (ReadStmt) READ LPAREN Designator RPAREN SEMI
 	| (BreakStmt) BREAK SEMI
@@ -222,8 +220,6 @@ IfStatement ::= IfStatementIf IfStatementElse;
 //   if (a == 5) a = 6; else { a = 7; b = 8; }
 //   if (a == 5) { a = 6; b = 7; } else { a = 7; b = 8; }
 
-
-
 StatementHelper ::= Statement
 	| LBRACE StatementList RBRACE;
 
@@ -233,8 +229,8 @@ ReturnItem ::= (ReturnItemExpr) Expr
 	| (ReturnItemVoid) ;
 // EXAMPLE: 5 # {{empty}}
 
-PrintStatementOptional ::= COMMA NUMBER
-	| ;
+PrintStatementOptional ::= (PrintStatementOptionalYes) Expr COMMA NUMBER:width
+	| (PrintStatementOptionalNo) Expr;
 
 
 // CONDITIONS
@@ -246,7 +242,7 @@ CondTerm ::= CondFact
 	| CondFact AND CondTerm;
 // EXAMPLE: a == 5 # a == 5 && b == 6
 
-CondFact ::= (CondFactRel) Expr:exprLeft RelOp:operator Expr:exprRight
+CondFact ::= (CondFactRel) Expr RelOp Expr
 	| (CondFactExpr) Expr;
 // EXAMPLE: a == 5
 
@@ -275,8 +271,8 @@ ActPars ::= ActParsList
 	| ;
 // EXAMPLE: 5, 6, 7 # {{empty}}
 
-ActParsList ::= ActParsList COMMA Expr
-	| Expr;
+ActParsList ::= (ActParsListComma) ActParsList COMMA Expr
+	| (ActParsListSingle) Expr;
 // EXAMPLE: 5, 6, 7 # 5
 
 
