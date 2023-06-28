@@ -3,6 +3,7 @@ package rs.ac.bg.etf.pp1;
 import rs.ac.bg.etf.pp1.ast.*;
 import rs.etf.pp1.mj.runtime.Code;
 import rs.etf.pp1.symboltable.concepts.Obj;
+import sun.security.krb5.internal.crypto.Des;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -121,9 +122,6 @@ public class CodeGenerator extends VisitorAdaptor {
 		
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
-		if (designatorObj.getKind() == Obj.Elem) Code.put(Code.dup2);
-		
-		Code.load(designatorObj);
 		Code.loadConst(1);
 		Code.put(Code.add);
 		Code.store(designatorObj);
@@ -134,9 +132,6 @@ public class CodeGenerator extends VisitorAdaptor {
 		
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
-		if (designatorObj.getKind() == Obj.Elem) Code.put(Code.dup2);
-		
-		Code.load(designatorObj);
 		Code.loadConst(1);
 		Code.put(Code.sub);
 		Code.store(designatorObj);
@@ -147,37 +142,19 @@ public class CodeGenerator extends VisitorAdaptor {
 		
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
-		if (designatorObj.getKind() == Obj.Elem) Code.put(Code.dup2);
-		
 		Code.store(designatorObj);
 	}
 	
 	public void visit(DesignatorVar designator) {
 		System.out.println("DesignatorVar");
 		
-		SyntaxNode parent = designator.getParent();
-		
-		if (parent instanceof DesignatorStatementInc
-				|| parent instanceof DesignatorStatementDec
-				|| parent instanceof DesignatorStatementAssign
-				|| parent instanceof DesignatorStatementFunc) {
-			return;
-		}
-		
 		Code.load(designator.obj);
 	}
 	
+	public void visit(DesignatorName designatorName) {}
+	
 	public void visit(DesignatorArray designator) {
 		System.out.println("DesignatorArray");
-		
-		SyntaxNode parent = designator.getParent();
-		
-		if (parent instanceof DesignatorStatementInc
-				|| parent instanceof DesignatorStatementDec
-				|| parent instanceof DesignatorStatementAssign
-				|| parent instanceof DesignatorStatementFunc) {
-			return;
-		}
 		
 		Code.load(designator.obj);
 	}

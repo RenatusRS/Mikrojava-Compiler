@@ -67,7 +67,9 @@ public class Compiler {
 			log.info("===================================");
 			
 		} catch (Exception e) {
+			log.error("===================================");
 			log.error(e.getMessage(), e);
+			log.error("===================================");
 		}
 	}
 }

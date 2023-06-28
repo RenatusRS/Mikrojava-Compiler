@@ -19,7 +19,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	private int whileDepth = 0;
 	
 	private final Stack<List<Struct>> methodCalls = new Stack<>();
-	private final HashMap<String, List<Struct>> methods = new HashMap<>();
+	private final HashMap<Obj, List<Struct>> methods = new HashMap<>();
 	
 	public SemanticAnalyzer() {
 		Tab.init();
@@ -205,9 +205,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			return;
 		}
 		
-		System.out.println(designatorObj.getName());
-		System.out.println(methods);
-		List<Struct> methodParams = methods.get(designatorObj.getName());
+		List<Struct> methodParams = methods.get(designatorObj);
 		List<Struct> callParams = methodCalls.pop();
 		
 		if (methodParams.size() != callParams.size()) {
@@ -334,10 +332,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	// DESIGNATOR
 	// ========================================================================
 	public void visit(DesignatorVar designator) {
-		designator.obj = Tab.find(designator.getName());
+		designator.obj = Tab.find(designator.getDesignatorName().getName());
 		
 		if (designator.obj == Tab.noObj) {
-			report_error("DesignatorVar: Name '" + designator.getName() + "' not found in symbol table", designator);
+			report_error("DesignatorVar: Name '" + designator.getDesignatorName().getName() + "' not found in symbol table", designator);
 			return;
 		}
 		
@@ -349,10 +347,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	}
 	
 	public void visit(DesignatorArray designator) {
-		designator.obj = Tab.find(designator.getName());
+		designator.obj = Tab.find(designator.getDesignatorName().getName());
 		
 		if (designator.obj == Tab.noObj) {
-			report_error("DesignatorArray: Name '" + designator.getName() + "' not found in symbol table", designator);
+			report_error("DesignatorArray: Name '" + designator.getDesignatorName().getName() + "' not found in symbol table", designator);
 			return;
 		}
 		
@@ -370,22 +368,22 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	}
 	
 	public void visit(DesignatorMatrix designator) {
-		designator.obj = Tab.find(designator.getName());
+		designator.obj = Tab.find(designator.getDesignatorName().getName());
 		
 		if (designator.obj == Tab.noObj) {
-			report_error("DesignatorMatrix: Name '" + designator.getName() + "' not found in symbol table", designator);
+			report_error("DesignatorMatrix: Name '" + designator.getDesignatorName().getName() + "' not found in symbol table", designator);
 			return;
 		}
 		
 		if (designator.obj.getType().getKind() != Struct.Array || designator.obj.getType().getElemType().getKind() != Struct.Array) {
-			report_error("DesignatorMatrix: Name '" + designator.getName() + "' is not a matrix 1", designator);
+			report_error("DesignatorMatrix: Name '" + designator.getDesignatorName().getName() + "' is not a matrix 1", designator);
 			return;
 		}
 		
 		designator.obj = new Obj(Obj.Elem, designator.obj.getName(), designator.obj.getType().getElemType());
 		
 		if (designator.obj.getType().getKind() != Struct.Array) {
-			report_error("DesignatorMatrix: Name '" + designator.getName() + "' is not a matrix 2", designator);
+			report_error("DesignatorMatrix: Name '" + designator.getDesignatorName().getName() + "' is not a matrix 2", designator);
 			return;
 		}
 		
@@ -437,7 +435,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	public void visit(DesignatorStatementAssign designatorStatement) {
 		Obj designatorStatementObj = designatorStatement.getDesignator().obj;
 		
-		if (designatorStatementObj.getKind() != Obj.Var) {
+		if (designatorStatementObj.getKind() != Obj.Var && designatorStatementObj.getKind() != Obj.Elem) {
 			report_error("DesignatorStatementAssign: Designator is not a variable", designatorStatement);
 			return;
 		}
@@ -456,7 +454,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			return;
 		}
 		
-		List<Struct> methodParams = methods.get(designatorObj.getName());
+		List<Struct> methodParams = methods.get(designatorObj);
 		List<Struct> callParams = methodCalls.pop();
 		
 		if (methodParams.size() != callParams.size()) {
@@ -569,7 +567,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	
 	public void visit(MethodTypeName methodTypeName) {
 		currentMethod = methodTypeName.obj = Tab.insert(Obj.Meth, methodTypeName.getName(), requiredType);
-		methods.put(currentMethod.getName(), new ArrayList<>());
+		methods.put(currentMethod, new ArrayList<>());
 		Tab.openScope();
 	}
 	
@@ -590,7 +588,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		}
 		
 		Struct type = formPar.getType().struct;
-		methods.get(currentMethod.getName()).add(type);
+		methods.get(currentMethod).add(type);
 		Tab.insert(Obj.Var, formPar.getName(), type);
 	}
 	
@@ -601,7 +599,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		}
 		
 		Struct type = new Struct(Struct.Array, formPar.getType().struct);
-		methods.get(currentMethod.getName()).add(type);
+		methods.get(currentMethod).add(type);
 		Tab.insert(Obj.Var, formPar.getName(), type);
 	}
 	
@@ -612,7 +610,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		}
 		
 		Struct type = new Struct(Struct.Array, new Struct(Struct.Array, formPar.getType().struct));
-		methods.get(currentMethod.getName()).add(type);
+		methods.get(currentMethod).add(type);
 		Tab.insert(Obj.Var, formPar.getName(), type);
 	}
 	

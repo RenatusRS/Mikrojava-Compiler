@@ -67,7 +67,7 @@ terminal Boolean BOOL;
 terminal Character CHAR;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName, Designator;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, ReturnTypes, Factor, MethodVarDecl;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, ReturnTypes, Factor, MethodVarDecl, DesignatorName;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct ConstValue, Term, Expr, CondFact, PrintStatementOptional;
 
 nonterminal ProgDeclList, ProgDecl;
@@ -199,10 +199,12 @@ DesignatorStatement ::= (DesignatorStatementAssign) Designator AssignOp Expr
 	| (DesignatorStatementFunc) Designator LPAREN ActPars RPAREN;
 // EXAMPLE: a = 5; # a++; # a--; # a(b, c, d);
 
-Designator ::= (DesignatorVar) IDENT:name
-	| (DesignatorArray) IDENT:name LBRACKET Expr RBRACKET
-	| (DesignatorMatrix) IDENT:name LBRACKET Expr RBRACKET LBRACKET Expr RBRACKET; // TODO add class field access
+Designator ::= (DesignatorVar) DesignatorName
+	| (DesignatorArray) DesignatorName LBRACKET Expr RBRACKET
+	| (DesignatorMatrix) DesignatorName LBRACKET Expr RBRACKET LBRACKET Expr RBRACKET; // TODO add class field access
 // EXAMPLE: a # a[5] # a[5][6]
+
+DesignatorName ::= (DesignatorName) IDENT:name;
 
 // OTHER STATEMENTS
 

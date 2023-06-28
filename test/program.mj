@@ -1,23 +1,14 @@
 program MJProgram
-int x; int y;
+int x; int y[], z[], w[];
 {
 
-
-
-	int k(int a) int b; {
-		b = 2;
-		print(a + b);
-		return a;
-	}
-
 	int main() {
-		x = -4 * (-3 + 1);
+		w = new int[2];
+		w[0] = 1;
+		w[1] = 2;
 
-		k(12);
-
-		read(x);
-
-		print(x);
+		print(w[0]);
+		print(w[1]);
 
 		return 1;
 	}
