@@ -88,7 +88,6 @@ class Kvadar extends Predmet
 
 int zapreminaK, zapreminaS;
 int tezinaK, tezinaS;
-int tezine[];
 {
 
 	void ispis( Predmet p)
@@ -156,12 +155,5 @@ int tezine[];
 		print(zapreminaK); print(eol);
 		print(tezinaS); print(eol);
 		print(tezinaK); print(eol);
-
-		tezine = predmeti.map(predmet => predmet.dohvTezinu());
-		i = 0;
-		while(i < 6){
-			print(tezine[i]);
-			i++;
-		}
 	}
 }

@@ -19,12 +19,6 @@ public class CounterVisitor extends VisitorAdaptor {
 		public void visit(FormParArray formPar) {
 			count++;
 		}
-		
-		public void visit(FormParMatrix formPar) {
-			count++;
-		}
-		
-		
 	}
 	
 	public static class VarCounter extends CounterVisitor {

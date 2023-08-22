@@ -88,13 +88,10 @@ int a, curr;
 			niz[i] = niz[i] * 2 * a;
 			i++;
 		}
-		
-		niz2 = niz.map(curr => curr * 3);
-		i = 0;
-		while (i < 3){
-			print(niz2[i]);
-			i++;
-		}
+		niz[1] = 6;
+		niz.foreach(curr => print(curr););
+		niz2 = niz.findAndReplace(jedan + 5, curr => curr * 3);
+		niz2.foreach(curr => print(curr););
 	}
 }
 

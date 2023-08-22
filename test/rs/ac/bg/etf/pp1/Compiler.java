@@ -36,7 +36,7 @@ public class Compiler {
 	public static void main(String[] args) {
 		try {
 			log.info("===================================");
-			log.info("Starting compilation...");
+			log.info("STARTING COMPILATION");
 			log.info("===================================");
 			log.info("Parsing source file...");
 			log.info("===================================");
@@ -46,8 +46,7 @@ public class Compiler {
 			log.info("===================================");
 			log.info("Parsing finished!");
 			log.info("===================================");
-			log.info("Abstract syntax tree:");
-			log.info(prog.toString(""));
+			log.info("Abstract syntax tree:\n" + prog.toString(""));
 			log.info("===================================");
 			log.info("Semantic analysis started...");
 			log.info("===================================");

@@ -32,18 +32,18 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		if (errorDetected) throw new Exception("Semantic analysis failed");
 	}
 	
+	private String formatMessage(String message, SyntaxNode info) {
+		return "Line " + info.getLine() + " [" + info.getClass().getSimpleName() + "]: " + message;
+	}
+	
 	private void report_error(String message, SyntaxNode info) {
 		errorDetected = true;
 		
-		if (info != null) message = "Line " + info.getLine() + ": " + message;
-		
-		log.error(message);
+		log.error(formatMessage(message, info));
 	}
 	
 	private void report_info(String message, SyntaxNode info) {
-		if (info != null) message = "Line " + info.getLine() + ": " + message;
-		
-		log.info(message);
+		log.info(formatMessage(message, info));
 	}
 
 	// ========================================================================
@@ -69,12 +69,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		type.struct = Tab.noType;
 		
 		if (typeNode == Tab.noObj) {
-			report_error("Type: Type '" + type.getTypeName() + "' not found in symbol table", null);
+			report_error("Type '" + type.getTypeName() + "' not found in symbol table", type);
 			return;
 		}
 		
 		if (Obj.Type != typeNode.getKind()) {
-			report_error("Type: Name '" + type.getTypeName() + "' is not a type", type);
+			report_error("Name '" + type.getTypeName() + "' is not a type", type);
 			return;
 		}
 		
@@ -84,12 +84,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	
 	public void visit(ConstDecl constDecl) {
 		if (Tab.find(constDecl.getName()) != Tab.noObj) {
-			report_error("ConstDecl: Name '" + constDecl.getName() + "' already in use", constDecl);
+			report_error("Name '" + constDecl.getName() + "' already in use", constDecl);
 			return;
 		}
 		
 		if (!constDecl.getConstValue().struct.assignableTo(requiredType)) {
-			String message = "ConstDecl: Type of constant '" + constDecl.getName() + "' does not match required type (required: '" + structToString(requiredType) + "', got: '" + structToString(constDecl.getConstValue().struct) + "')";
+			String message = "Type of constant '" + constDecl.getName() + "' does not match required type (required: '" + structToString(requiredType) + "', got: '" + structToString(constDecl.getConstValue().struct) + "')";
 			report_error(message, constDecl);
 			return;
 		}
@@ -97,45 +97,32 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Obj constNode = Tab.insert(Obj.Con, constDecl.getName(), requiredType);
 		constNode.setLevel(0);
 		
-		report_info("ConstDecl: Inserted constant '" + constDecl.getName() + "'", constDecl);
+		report_info("Inserted constant '" + constDecl.getName() + "'", constDecl);
 	}
 	
 	public void visit(VarDeclName varDecl) {
 		if (Tab.find(varDecl.getName()) != Tab.noObj) {
-			report_error("VarDeclName: Name '" + varDecl.getName() + "' already in use", varDecl);
+			report_error("Name '" + varDecl.getName() + "' already in use", varDecl);
 			return;
 		}
 		
 		Obj varNode = Tab.insert(Obj.Var, varDecl.getName(), requiredType);
 		varNode.setLevel(0);
 		
-		report_info("VarDeclName: Inserted variable '" + varDecl.getName() + "'", varDecl);
+		report_info("Inserted variable '" + varDecl.getName() + "'", varDecl);
 	}
 	
 	public void visit(VarDeclArray varDecl) {
 		if (Tab.find(varDecl.getName()) != Tab.noObj) {
-			report_error("VarDeclArray: Name '" + varDecl.getName() + "' already in use", varDecl);
+			report_error("Name '" + varDecl.getName() + "' already in use", varDecl);
 			return;
 		}
 		
 		Obj varNode = Tab.insert(Obj.Var, varDecl.getName(), new Struct(Struct.Array, requiredType));
 		varNode.setLevel(0);
 		
-		report_info("VarDeclArray: Inserted array '" + varDecl.getName() + "'", varDecl);
+		report_info("Inserted array '" + varDecl.getName() + "'", varDecl);
 	}
-	
-	public void visit(VarDeclMatrix varDecl) {
-		if (Tab.find(varDecl.getName()) != Tab.noObj) {
-			report_error("VarDeclMatrix: Name '" + varDecl.getName() + "' already in use", varDecl);
-			return;
-		}
-		
-		Obj varNode = Tab.insert(Obj.Var, varDecl.getName(), new Struct(Struct.Array, new Struct(Struct.Array, requiredType)));
-		varNode.setLevel(0);
-		
-		report_info("VarDeclMatrix: Inserted matrix '" + varDecl.getName() + "'", varDecl);
-	}
-	
 	
 	// ========================================================================
 	// CONST VALUE
@@ -171,21 +158,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		factor.struct = new Struct(Struct.Array, factor.getType().struct);
 		
 		if (factor.getExpr().struct != Tab.intType) {
-			report_error("FactorArray: Array index is not of type int", factor);
-			return;
-		}
-	}
-	
-	public void visit(FactorMatrix factor) {
-		factor.struct = new Struct(Struct.Array, new Struct(Struct.Array, factor.getType().struct));
-		
-		if (factor.getExpr().struct != Tab.intType) {
-			report_error("FactorMatrix: Matrix index is not of type int", factor);
-			return;
-		}
-		
-		if (factor.getExpr1().struct != Tab.intType) {
-			report_error("FactorMatrix: Matrix array index is not of type int", factor);
+			report_error("Array index is not of type int", factor);
 			return;
 		}
 	}
@@ -196,12 +169,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		factor.struct = designatorObj.getType();
 		
 		if (designatorObj == Tab.noObj) {
-			report_error("FactorFuncCall: Name '" + factor.getDesignator().obj.getName() + "' not found in symbol table", factor);
+			report_error("Name '" + factor.getDesignator().obj.getName() + "' not found in symbol table", factor);
 			return;
 		}
 		
 		if (designatorObj.getKind() != Obj.Meth) {
-			report_error("FactorFuncCall: Name '" + factor.getDesignator().obj.getName() + "' is not a function", factor);
+			report_error("Name '" + factor.getDesignator().obj.getName() + "' is not a function", factor);
 			return;
 		}
 		
@@ -209,13 +182,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		List<Struct> callParams = methodCalls.pop();
 		
 		if (methodParams.size() != callParams.size()) {
-			report_error("FactorFuncCall: Number of parameters does not match", factor);
+			report_error("Number of parameters does not match", factor);
 			return;
 		}
 		
 		for (int i = 0; i < methodParams.size(); i++) {
 			if (!compareStructs(methodParams.get(i), callParams.get(i))) {
-				report_error("FactorFuncCall: Parameter types do not match", factor);
+				report_error("Parameter types do not match", factor);
 				return;
 			}
 		}
@@ -232,7 +205,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		expr.struct = Tab.intType;
 		
 		if (expr.getTerm().struct != Tab.intType) {
-			report_error("ExprMinus: Expression is not of type int", expr);
+			report_error("Expression is not of type int", expr);
 			return;
 		}
 	}
@@ -241,12 +214,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		expr.struct = Tab.intType;
 		
 		if (expr.getTerm().struct != Tab.intType) {
-			report_error("ExprAdd: Expression [term] is not of type int", expr);
+			report_error("Expression [term] is not of type int", expr);
 			return;
 		}
 		
 		if (expr.getExpr().struct != Tab.intType) {
-			report_error("ExprAdd: Expression [expr] is not of type int", expr);
+			report_error("Expression [expr] is not of type int", expr);
 			return;
 		}
 	}
@@ -256,29 +229,29 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 		Obj designator = expr.getDesignator().obj;
 		if (designator.getKind() != Obj.Var) {
-			report_error("ExprMap: Designator is not a variable", expr);
+			report_error("Designator is not a variable", expr);
 			return;
 		}
 		
 		if (designator.getType().getKind() != Struct.Array) {
-			report_error("ExprMap: Designator is not an array (required: '" + structToString(Struct.Array) + "', got: '" + structToString(designator.getType().getKind()) + "')", expr);
+			report_error("Designator is not an array (required: '" + structToString(Struct.Array) + "', got: '" + structToString(designator.getType().getKind()) + "')", expr);
 			return;
 		}
 		
 		if (designator.getType().getElemType().getKind() == Struct.Array) {
-			report_error("ExprMap: Designator shouldn't be a matrix", expr);
+			report_error("Designator shouldn't be a matrix", expr);
 			return;
 		}
 		
 		Obj iterator = Tab.find(expr.getIterator());
 		
 		if (iterator == Tab.noObj) {
-			report_error("ExprMap: Iterator '" + expr.getIterator() + "' not found in symbol table", expr);
+			report_error("Iterator '" + expr.getIterator() + "' not found in symbol table", expr);
 			return;
 		}
 		
 		if (iterator.getType() != designator.getType().getElemType()) {
-			report_error("ExprMap: Iterator '" + expr.getIterator() + "' is not of type " + designator.getType().getElemType().getKind(), expr);
+			report_error("Iterator '" + expr.getIterator() + "' is not of type " + designator.getType().getElemType().getKind(), expr);
 			return;
 		}
 		
@@ -292,12 +265,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		term.struct = term.getFactor().struct;
 		
 		if (term.getFactor().struct != Tab.intType) {
-			report_error("TermMul: Term [factor] is not of type int", term);
+			report_error("Term [factor] is not of type int", term);
 			return;
 		}
 		
 		if (term.getTerm().struct != Tab.intType) {
-			report_error("TermMul: Term [term] is not of type int", term);
+			report_error("Term [term] is not of type int", term);
 			return;
 		}
 	}
@@ -313,7 +286,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		condFact.struct = Tab.boolType;
 		
 		if (!condFact.getExpr().struct.compatibleWith(condFact.getExpr1().struct)) {
-			report_error("CondFactRel: Condition expression types do not match (left: '" + structToString(condFact.getExpr().struct) + "', right: '" + structToString(condFact.getExpr1().struct) + "')", condFact);
+			report_error("Condition expression types do not match (left: '" + structToString(condFact.getExpr().struct) + "', right: '" + structToString(condFact.getExpr1().struct) + "')", condFact);
 			return;
 		}
 	}
@@ -322,7 +295,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		condFact.struct = condFact.getExpr().struct;
 		
 		if (condFact.struct != Tab.boolType) {
-			report_error("CondFactExpr: Condition expression is not of type bool", condFact);
+			report_error("Condition expression is not of type bool", condFact);
 			return;
 		}
 	}
@@ -335,7 +308,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		designator.obj = Tab.find(designator.getDesignatorName().getName());
 		
 		if (designator.obj == Tab.noObj) {
-			report_error("DesignatorVar: Name '" + designator.getDesignatorName().getName() + "' not found in symbol table", designator);
+			report_error("Name '" + designator.getDesignatorName().getName() + "' not found in symbol table", designator);
 			return;
 		}
 		
@@ -350,54 +323,21 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		designator.obj = Tab.find(designator.getDesignatorName().getName());
 		
 		if (designator.obj == Tab.noObj) {
-			report_error("DesignatorArray: Name '" + designator.getDesignatorName().getName() + "' not found in symbol table", designator);
+			report_error("Name '" + designator.getDesignatorName().getName() + "' not found in symbol table", designator);
 			return;
 		}
 		
 		if (designator.obj.getType().getKind() != Struct.Array) {
-			report_error("DesignatorArray: Designator is not an array (required: '" + structToString(Struct.Array) + "', got: '" + structToString(designator.obj.getType().getKind()) + "')", designator);
+			report_error("Designator is not an array (required: '" + structToString(Struct.Array) + "', got: '" + structToString(designator.obj.getType().getKind()) + "')", designator);
 			return;
 		}
 		
 		if (designator.getExpr().struct != Tab.intType) {
-			report_error("DesignatorArray: Array index is not of type int", designator);
+			report_error("Array index is not of type int", designator);
 			return;
 		}
 		
 		designator.obj = new Obj(Obj.Elem, designator.obj.getName(), designator.obj.getType().getElemType());
-	}
-	
-	public void visit(DesignatorMatrix designator) {
-		designator.obj = Tab.find(designator.getDesignatorName().getName());
-		
-		if (designator.obj == Tab.noObj) {
-			report_error("DesignatorMatrix: Name '" + designator.getDesignatorName().getName() + "' not found in symbol table", designator);
-			return;
-		}
-		
-		if (designator.obj.getType().getKind() != Struct.Array || designator.obj.getType().getElemType().getKind() != Struct.Array) {
-			report_error("DesignatorMatrix: Name '" + designator.getDesignatorName().getName() + "' is not a matrix 1", designator);
-			return;
-		}
-		
-		designator.obj = new Obj(Obj.Elem, designator.obj.getName(), designator.obj.getType().getElemType());
-		
-		if (designator.obj.getType().getKind() != Struct.Array) {
-			report_error("DesignatorMatrix: Name '" + designator.getDesignatorName().getName() + "' is not a matrix 2", designator);
-			return;
-		}
-		
-		designator.obj = new Obj(Obj.Elem, designator.obj.getName(), designator.obj.getType().getElemType());
-		
-		if (designator.getExpr().struct != Tab.intType) {
-			report_error("DesignatorMatrix: Matrix index is not of type int", designator);
-			return;
-		}
-		
-		if (designator.getExpr1().struct != Tab.intType) {
-			report_error("DesignatorMatrix: Matrix array index is not of type int", designator);
-			return;
-		}
 	}
 	
 	// ========================================================================
@@ -408,12 +348,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
 		if (designatorObj.getKind() != Obj.Var) {
-			report_error("DesignatorStatementInc: Designator is not a variable", designatorStatement);
+			report_error("Designator is not a variable", designatorStatement);
 			return;
 		}
 		
 		if (designatorObj.getType() != Tab.intType) {
-			report_error("DesignatorStatementInc: Designator is not of type int", designatorStatement);
+			report_error("Designator is not of type int", designatorStatement);
 			return;
 		}
 	}
@@ -422,12 +362,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
 		if (designatorObj.getKind() != Obj.Var) {
-			report_error("DesignatorStatementDec: Designator is not a variable", designatorStatement);
+			report_error("Designator is not a variable", designatorStatement);
 			return;
 		}
 		
 		if (designatorObj.getType() != Tab.intType) {
-			report_error("DesignatorStatementDec: Designator is not of type int", designatorStatement);
+			report_error("Designator is not of type int", designatorStatement);
 			return;
 		}
 	}
@@ -436,12 +376,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Obj designatorStatementObj = designatorStatement.getDesignator().obj;
 		
 		if (designatorStatementObj.getKind() != Obj.Var && designatorStatementObj.getKind() != Obj.Elem) {
-			report_error("DesignatorStatementAssign: Designator is not a variable", designatorStatement);
+			report_error("Designator is not a variable", designatorStatement);
 			return;
 		}
 		
 		if (!designatorStatement.getExpr().struct.assignableTo(designatorStatementObj.getType())) {
-			report_error("DesignatorStatementAssign: Designator is not of the same type as expression", designatorStatement);
+			report_error("Designator is not of the same type as expression", designatorStatement);
 			return;
 		}
 	}
@@ -450,7 +390,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
 		if (designatorObj.getKind() != Obj.Meth) {
-			report_error("DesignatorStatementFunc: Designator is not a function", designatorStatement);
+			report_error("Designator is not a function", designatorStatement);
 			return;
 		}
 		
@@ -458,13 +398,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		List<Struct> callParams = methodCalls.pop();
 		
 		if (methodParams.size() != callParams.size()) {
-			report_error("DesignatorStatementFunc: Number of parameters does not match", designatorStatement);
+			report_error("Number of parameters does not match", designatorStatement);
 			return;
 		}
 		
 		for (int i = 0; i < methodParams.size(); i++) {
 			if (!compareStructs(methodParams.get(i), callParams.get(i))) {
-				report_error("DesignatorStatementFunc: Parameter types do not match", designatorStatement);
+				report_error("Parameter types do not match", designatorStatement);
 				return;
 			}
 		}
@@ -477,7 +417,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	public void visit(PrintStmt printStmt) {
 		Struct exprType = printStmt.getPrintStatementOptional().struct;
 		if (!Arrays.asList(Tab.intType, Tab.charType, Tab.boolType).contains(exprType)) {
-			report_error("PrintStmt: Print statement expression is not of type int, char or bool", printStmt);
+			report_error("Print statement expression is not of type int, char or bool", printStmt);
 			return;
 		}
 	}
@@ -492,12 +432,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	
 	public void visit(ReadStmt statement) {
 		if (statement.getDesignator().obj.getKind() != Obj.Var) {
-			report_error("ReadStmt: Read statement designator is not a variable", statement);
+			report_error("Read statement designator is not a variable", statement);
 			return;
 		}
 		
 		if (!Arrays.asList(Tab.intType, Tab.charType, Tab.boolType).contains(statement.getDesignator().obj.getType())) {
-			report_error("ReadStmt: Read statement designator is not of type int, char or bool", statement);
+			report_error("Read statement designator is not of type int, char or bool", statement);
 			return;
 		}
 	}
@@ -508,29 +448,29 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	
 	public void visit(ReturnItemExpr returnItem) {
 		if (currentMethod == Tab.noObj) {
-			report_error("ReturnItemExpr: Return expression outside of method", returnItem);
+			report_error("Return expression outside of method", returnItem);
 			return;
 		}
 		
 		if (currentMethod.getType() == Tab.noType) {
-			report_error("ReturnItemExpr: Return expression in void method", returnItem);
+			report_error("Return expression in void method", returnItem);
 			return;
 		}
 		
 		if (!currentMethod.getType().assignableTo(returnItem.getExpr().struct)) {
-			report_error("ReturnItemExpr: Return expression is not of the same type as method", returnItem);
+			report_error("Return expression is not of the same type as method", returnItem);
 			return;
 		}
 	}
 	
 	public void visit(ReturnItemVoid returnItem) {
 		if (currentMethod == Tab.noObj) {
-			report_error("ReturnItemVoid: Return expression outside of method", returnItem);
+			report_error("Return expression outside of method", returnItem);
 			return;
 		}
 		
 		if (currentMethod.getType() != Tab.noType) {
-			report_error("ReturnItemVoid: Return expression in non-void method", returnItem);
+			report_error("Return expression in non-void method", returnItem);
 			return;
 		}
 	}
@@ -549,14 +489,14 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	
 	public void visit(BreakStmt breakStmt) {
 		if (whileDepth == 0) {
-			report_error("BreakStmt: Break statement outside of while loop", breakStmt);
+			report_error("Break statement outside of while loop", breakStmt);
 			return;
 		}
 	}
 	
 	public void visit(ContinueStmt continueStmt) {
 		if (whileDepth == 0) {
-			report_error("ContinueStmt: Continue statement outside of while loop", continueStmt);
+			report_error("Continue statement outside of while loop", continueStmt);
 			return;
 		}
 	}
@@ -583,7 +523,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	
 	public void visit(FormParVar formPar) {
 		if (Tab.find(formPar.getName()) != Tab.noObj) {
-			report_error("FormParVar: Formal parameter '" + formPar.getName() + "' already declared", formPar);
+			report_error("Formal parameter '" + formPar.getName() + "' already declared", formPar);
 			return;
 		}
 		
@@ -594,7 +534,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	
 	public void visit(FormParArray formPar) {
 		if (Tab.find(formPar.getName()) != Tab.noObj) {
-			report_error("FormParArray: Formal parameter '" + formPar.getName() + "' already declared", formPar);
+			report_error("Formal parameter '" + formPar.getName() + "' already declared", formPar);
 			return;
 		}
 		
@@ -603,20 +543,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Tab.insert(Obj.Var, formPar.getName(), type);
 	}
 	
-	public void visit(FormParMatrix formPar) {
-		if (Tab.find(formPar.getName()) != Tab.noObj) {
-			report_error("FormParMatrix: Formal parameter '" + formPar.getName() + "' already declared", formPar);
-			return;
-		}
-		
-		Struct type = new Struct(Struct.Array, new Struct(Struct.Array, formPar.getType().struct));
-		methods.get(currentMethod).add(type);
-		Tab.insert(Obj.Var, formPar.getName(), type);
-	}
-	
 	public void visit(MethodVarName methodVar) {
 		if (Tab.find(methodVar.getName()) != Tab.noObj) {
-			report_error("MethodVarName: Method variable '" + methodVar.getName() + "' already declared", methodVar);
+			report_error("Method variable '" + methodVar.getName() + "' already declared", methodVar);
 			return;
 		}
 		
@@ -625,20 +554,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	
 	public void visit(MethodVarArray methodVar) {
 		if (Tab.find(methodVar.getName()) != Tab.noObj) {
-			report_error("MethodVarArray: Method variable '" + methodVar.getName() + "' already declared", methodVar);
+			report_error("Method variable '" + methodVar.getName() + "' already declared", methodVar);
 			return;
 		}
 
 		Tab.insert(Obj.Var, methodVar.getName(), new Struct(Struct.Array, requiredType));
-	}
-	
-	public void visit(MethodVarMatrix methodVar) {
-		if (Tab.find(methodVar.getName()) != Tab.noObj) {
-			report_error("MethodVarMatrix: Method variable '" + methodVar.getName() + "' already declared", methodVar);
-			return;
-		}
-		
-		Tab.insert(Obj.Var, methodVar.getName(), new Struct(Struct.Array, new Struct(Struct.Array, requiredType)));
 	}
 	
 	// ========================================================================
