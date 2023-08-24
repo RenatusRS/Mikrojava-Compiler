@@ -1,20 +1,2 @@
-
-  pos: instruction operands
-     | expressionstack
------------------------------
-    0: enter       0 0 
-     | 
-    3: getstatic   3 
-     | 0 
-    6: const_2     
-     | 0 2 
-    7: newarray    1 
-     | 0 2 
-    9: putstatic   3 
-     | 0 
-   12: const_0     
-     | 0 0 
-   13: aload       
--- exception at address 13: null reference used
-
-Completion took 4 ms
+                                                     20
+Completion took 1 ms

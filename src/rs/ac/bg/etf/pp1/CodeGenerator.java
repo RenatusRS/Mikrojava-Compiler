@@ -1,17 +1,21 @@
 package rs.ac.bg.etf.pp1;
 
 import rs.ac.bg.etf.pp1.ast.*;
+import rs.ac.bg.etf.pp1.util.Analyzer;
 import rs.etf.pp1.mj.runtime.Code;
 import rs.etf.pp1.symboltable.concepts.Obj;
-import sun.security.krb5.internal.crypto.Des;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Stack;
+
+import static rs.etf.pp1.mj.runtime.Code.eq;
 
 
 public class CodeGenerator extends VisitorAdaptor {
+	
+	private final Analyzer analyzer = new Analyzer(MJParser.class);
 	
 	public void compile(Program program) throws Exception {
 		File objFile = new File("test/program.obj");
@@ -21,11 +25,40 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.write(Files.newOutputStream(objFile.toPath()));
 	}
 	
+	public void visit(ProgName progName) {
+		Tab.find("chr").setAdr(Code.pc);
+		Tab.find("ord").setAdr(Code.pc);
+		Code.put(Code.enter);
+		
+		Code.put(1);
+		Code.put(1);
+		
+		Code.put(Code.load_n);
+		Code.put(Code.exit);
+		Code.put(Code.return_);
+		
+		Tab.find("len").setAdr(0);
+		
+		Code.put(Code.enter);
+		
+		Code.put(1);
+		Code.put(1);
+		
+		Code.put(Code.load_n);
+		Code.put(Code.arraylength);
+		Code.put(Code.exit);
+		Code.put(Code.return_);
+	}
+	
+	Stack<Integer> fixUps = new Stack<>();
+	
 	// ======================================== //
 	// PRINT READ
 	// ======================================== //
 	
 	public void visit(PrintStatementOptionalNo printStatementOptional) {
+		analyzer.report_info("PRINT NO OPTIONAL", printStatementOptional);
+		
 		if (printStatementOptional.getExpr().struct == Tab.charType) {
 			Code.loadConst(1);
 			Code.put(Code.bprint);
@@ -36,6 +69,8 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(PrintStatementOptionalYes printStatementOptional) {
+		analyzer.report_info("PRINT YES OPTIONAL", printStatementOptional);
+		
 		Code.loadConst(printStatementOptional.getWidth());
 		
 		int code = printStatementOptional.getExpr().struct == Tab.charType ? Code.bprint : Code.print;
@@ -43,6 +78,8 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(ReadStmt readStmt) {
+		analyzer.report_info("READ", readStmt);
+		
 		int code = readStmt.getDesignator().obj.getType() == Tab.charType ? Code.bread : Code.read;
 		
 		Code.put(code);
@@ -54,29 +91,32 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	
 	public void visit(ConstInt constInt) {
-		System.out.println("ConstInt");
+		analyzer.report_info(constInt.getN1().toString(), constInt);
 		
 		Obj con = Tab.insert(Obj.Con, "$", constInt.struct);
 		con.setLevel(0);
 		con.setAdr(constInt.getN1());
+		
 		Code.load(con);
 	}
 	
 	public void visit(ConstChar constChar) {
-		System.out.println("ConstChar");
+		analyzer.report_info(constChar.getC1().toString(), constChar);
 		
 		Obj con = Tab.insert(Obj.Con, "$", constChar.struct);
 		con.setLevel(0);
 		con.setAdr(constChar.getC1());
+		
 		Code.load(con);
 	}
 	
 	public void visit(ConstBool constBool) {
-		System.out.println("ConstBool");
+		analyzer.report_info(constBool.getB1() ? "True" : "False", constBool);
 		
 		Obj con = Tab.insert(Obj.Con, "$", constBool.struct);
 		con.setLevel(0);
 		con.setAdr(constBool.getB1() ? 1 : 0);
+		
 		Code.load(con);
 	}
 	
@@ -85,8 +125,6 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	
 	public void visit(MethodTypeName methodTypeName) {
-		System.out.println("MethodTypeName");
-		
 		if ("main".equalsIgnoreCase(methodTypeName.getName())) Code.mainPc = Code.pc;
 		
 		methodTypeName.obj.setAdr(Code.pc);
@@ -99,7 +137,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		CounterVisitor.FormParamCounter formParCnt = new CounterVisitor.FormParamCounter();
 		methodNode.traverseTopDown(formParCnt);
 		
-		System.out.println(methodTypeName.getName() + " " + formParCnt.getCount() + " " + varCnt.getCount());
+		analyzer.report_info("BEGIN " + methodTypeName.getName() + " | PARS: " + formParCnt.getCount() + ", VARS: " + varCnt.getCount(), methodTypeName);
 		
 		Code.put(Code.enter);
 		Code.put(formParCnt.getCount());
@@ -107,7 +145,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(MethodDecl methodDecl) {
-		System.out.println("MethodDecl");
+		analyzer.report_info("END " + methodDecl.getMethodTypeName().getName(), methodDecl);
 		
 		Code.put(Code.exit);
 		Code.put(Code.return_);
@@ -118,7 +156,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	
 	public void visit(DesignatorStatementInc designatorStatement) {
-		System.out.println("DesignatorStatementInc");
+		analyzer.report_info("INC", designatorStatement);
 		
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
@@ -128,7 +166,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(DesignatorStatementDec designatorStatement) {
-		System.out.println("DesignatorStatementDec");
+		analyzer.report_info("DEC", designatorStatement);
 		
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
@@ -138,37 +176,45 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(DesignatorStatementAssign designatorStatement) {
-		System.out.println("DesignatorAssign");
+		analyzer.report_info("ASSIGN", designatorStatement);
 		
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
 		Code.store(designatorObj);
 	}
 	
-	public void visit(DesignatorVar designator) {
-		System.out.println("DesignatorVar");
+	
+	public void visit(DesignatorName designatorName) {
+		if (designatorName.getParent() instanceof DesignatorVar) return;
 		
-		Code.load(designator.obj);
+		analyzer.report_info("DESIGNATOR LOAD", designatorName);
+		
+		Code.load(designatorName.obj);
 	}
 	
-	public void visit(DesignatorName designatorName) {}
+	public void visit(DesignatorVar designator) {
+		SyntaxNode parent = designator.getParent();
+		
+		if (parent instanceof DesignatorStatementInc) {
+			analyzer.report_info("VAR LOAD: Inc", designator);
+			Code.load(designator.obj);
+		} else if (parent instanceof DesignatorStatementDec) {
+			analyzer.report_info("VAR LOAD: Dec", designator);
+			Code.load(designator.obj);
+		} else if (parent instanceof FactorVar) {
+			analyzer.report_info("VAR LOAD: FactorVar", designator);
+			Code.load(designator.obj);
+		} else analyzer.report_info("VAR LOAD SKIP", designator);
+	}
 	
 	public void visit(DesignatorArray designator) {
-		System.out.println("DesignatorArray");
-		
-		Code.load(designator.obj);
+		if (designator.getParent() instanceof FactorVar) {
+			analyzer.report_info("ARRAY LOAD: FactorVar", designator);
+			Code.load(designator.obj);
+		} else analyzer.report_info("ARRAY LOAD SKIP", designator);
 	}
 	
-	public void visit(DesignatorStatementFunc designatorStatement) { // TODO vrv ne radi
-		System.out.println("DesignatorFunc");
-		
-		Obj functionObj = designatorStatement.getDesignator().obj;
-		
-		int offset = functionObj.getAdr() - Code.pc;
-		Code.put(Code.call);
-		Code.put2(offset);
-		
-		if (functionObj.getType() != Tab.noType) Code.put(Code.pop);
+	public void visit(DesignatorStatementFunc designatorStatement) {
 	}
 	
 	// ======================================== //
@@ -176,27 +222,22 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	
 	public void visit(FactorFuncCall designatorStatement) {
-		System.out.println("FactorFunc");
-		
-		Obj functionObj = designatorStatement.getDesignator().obj;
-		
-		int offset = functionObj.getAdr() - Code.pc;
-		Code.put(Code.call);
-		Code.put2(offset);
 	}
 	
 	public void visit(ReturnStmt statement) {
-		System.out.println("ReturnStmt");
+		analyzer.report_info("RETURN", statement);
 		
 		Code.put(Code.exit);
 		Code.put(Code.return_);
 	}
 	
 	public void visit(FactorArray factor) {
-		System.out.println("FactorArray");
+		boolean isChar = factor.struct.getElemType() == Tab.charType;
+		
+		analyzer.report_info("NEW ARRAY: " + (isChar ? "Char" : "Not Char"), factor);
 		
 		Code.put(Code.newarray);
-		Code.put(factor.getExpr().struct.getElemType() == Tab.charType ? 0 : 1);
+		Code.put(isChar ? 0 : 1);
 	}
 	
 	// ======================================== //
@@ -204,26 +245,31 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	
 	public void visit(ExprAdd expr) {
-		System.out.println("ExprAdd");
-		
 		SyntaxNode operation = expr.getAddOp();
 		
-		int code = operation instanceof PlusAO ? Code.add : Code.sub;
+		boolean isPlus = operation instanceof PlusAO;
+		
+		analyzer.report_info("ADD: " + (isPlus ? "Plus" : "Minus"), expr);
+		
+		int code = isPlus ? Code.add : Code.sub;
 		Code.put(code);
 	}
 	
 	public void visit(ExprMinus expr) {
-		System.out.println("ExprMinus");
+		analyzer.report_info("UNARY MINUS", expr);
 		
 		Code.put(Code.neg);
 	}
 	
 	public void visit(TermMul term) {
-		System.out.println("TermMul");
-		
 		SyntaxNode operation = term.getMulOp();
 		
 		int code = operation instanceof MulMO ? Code.mul : operation instanceof DivMO ? Code.div : Code.rem;
+		
+		String codeText = operation instanceof MulMO ? "MUL" : operation instanceof DivMO ? "DIV" : "MOD";
+		
+		analyzer.report_info("MUL: " + codeText, term);
+		
 		Code.put(code);
 	}
 	
@@ -232,30 +278,122 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	
 	public void visit(CondFactRel condFact) {
-		System.out.println("CondFactRel");
-		
 		SyntaxNode operation = condFact.getRelOp();
 		
 		int code;
 		
-		if (operation instanceof EqualRO) code = Code.eq;
+		if (operation instanceof EqualRO) code = eq;
 		else if (operation instanceof NotEqualRO) code = Code.ne;
 		else if (operation instanceof GreaterRO) code = Code.gt;
 		else if (operation instanceof GreaterEqualRO) code = Code.ge;
 		else if (operation instanceof LessRO) code = Code.lt;
 		else code = Code.le;
 		
+		analyzer.report_info("REL: " + operation.getClass().getSimpleName(), condFact);
+		
 		Code.putFalseJump(code, 0);
 	}
 	
 	// ======================================== //
-	// IF STATEMENT
+	// JUMPS
 	// ======================================== //
 	
-	Stack<List<Integer>> OrStack = new Stack<>();
-	Stack<List<Integer>> AndStack = new Stack<>();
-	Stack<List<Integer>> CondStack = new Stack<>();
+	public void visit(ConditionOr condition) {
+		analyzer.report_info("OR", condition);
+	}
 	
+	public void visit(IfStmt statement) {
+		analyzer.report_info("IF", statement);
+		
+		Code.fixup(fixUps.pop());
+	}
 	
+	public void visit(ElseStmt statement) {
+		analyzer.report_info("ELSE", statement);
+		
+		Code.fixup(fixUps.pop());
+	}
 	
+	public void visit(IfBase ifBase) {
+		analyzer.report_info("IF BASE", ifBase);
+		
+		Code.loadConst(0);
+		Code.putFalseJump(Code.gt, 0);
+		fixUps.push(Code.pc - 2);
+	}
+	
+	public void visit(ElseBase elseBase) {
+		analyzer.report_info("ELSE BASE", elseBase);
+		
+		Code.putJump(0);
+		Code.fixup(fixUps.pop());
+		fixUps.push(Code.pc - 2);
+	}
+	
+	// ======================================== //
+	// CUSTOM FUNCTIONS
+	// ======================================== //
+	
+	public void visit(DesignatorStatementFindAny designatorStatement) {
+		analyzer.report_info("FIND ANY", designatorStatement);
+		
+		Obj bool = designatorStatement.getDesignator().obj;
+		Obj arr = designatorStatement.getDesignator1().obj;
+		
+		Code.loadConst(0);
+		
+		int START = Code.pc;
+		
+		Code.put(Code.dup_x1);
+		
+		Code.load(arr);
+		
+		Code.put(Code.dup_x1);
+		Code.put(Code.pop);
+		
+		Code.put(Code.aload);
+		
+		Code.put(Code.dup2);
+		
+		Code.putFalseJump(Code.ne, 0);
+		int FOUND = Code.pc - 2;
+		
+		Code.put(Code.pop);
+		
+		Code.put(Code.dup_x1);
+		
+		Code.put(Code.pop);
+		
+		Code.loadConst(1);
+		Code.put(Code.add);
+		
+		Code.put(Code.dup);
+		
+		Code.load(arr);
+		Code.put(Code.arraylength);
+		
+		Code.putFalseJump(Code.ge, START);
+		
+		// fail found
+		Code.put(Code.pop);
+		Code.put(Code.pop);
+		
+		Code.loadConst(0);
+		
+		Code.putJump(0);
+		
+		int END = Code.pc - 2;
+		
+		// found
+		Code.fixup(FOUND);
+		
+		Code.put(Code.pop);
+		Code.put(Code.pop);
+		Code.put(Code.pop);
+		
+		Code.loadConst(1);
+		
+		Code.fixup(END);
+		Code.store(bool);
+	}
 }

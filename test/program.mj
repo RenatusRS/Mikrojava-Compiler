@@ -1,17 +1,30 @@
-program MJProgram
-int x; int y[], z[], w[];
+// Test301
+
+program test301
+
+	const int nula = 0;
+	const int jedan = 1;
+	const int pet = 5;
+
+	int niz[], niz2[], a, b;
+	char nizch[];
+
 {
+	void main()
+		int bodovi;
+		bool br;
+	{
+		br = false;
 
-	int main() {
-		w = new int[2];
-		w[0] = 1;
-		w[1] = 2;
+		if (br) {
+			bodovi = 10;
+		}
+		else {
+			bodovi = 20;
+		}
 
-		print(w[0]);
-		print(w[1]);
-
-		return 1;
+		print(bodovi, 55);
 	}
-
-
 }
+
+
