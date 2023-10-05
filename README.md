@@ -4,7 +4,7 @@
 
 ## Overview
 
-This repository contains the implementation of a compiler for the Mikrojava programming language. The compiler is designed to convert syntactically and semantically correct Mikrojava programs into Mikrojava bytecode, which can be executed on the Mikrojava Virtual Machine (MJVM).
+Implementation of a compiler for the Mikrojava programming language. The compiler is designed to convert syntactically and semantically correct Mikrojava programs into Mikrojava bytecode, which can be executed on the Mikrojava Virtual Machine (MJVM).
 
 ## Features and Functionalities
 
