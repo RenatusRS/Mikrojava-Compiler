@@ -68,10 +68,10 @@ Implementation of a compiler for the Mikrojava programming language. The compile
   - Compile the source code of the compiler into executable bytecode using necessary dependencies.
 
 ### Step 2: Execute Compiler
-- Start the `Compiler.java` from the directory `test/rs.ac.bg.etf.pp1`. This action will:
-  - Parse the Mikrojava source (`program.mj`) into an AST.
+- Start the `Compiler.java` from `test/rs.ac.bg.etf.pp1`. This action will:
+  - Parse the Mikrojava source (`program.mj` from the `test` folder) into an AST.
   - Perform a semantic analysis to ensure the code matches Mikrojava's language specifications.
-  - Convert the AST into MJVM-compatible bytecode.
+  - Convert the AST into MJVM-compatible bytecode (`program.obj`).
 
 ### Step 3: Run the Mikrojava Bytecode
 - Run the `run` job from the `build.xml` file. During this step:
