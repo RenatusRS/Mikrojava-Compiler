@@ -78,10 +78,9 @@ Implementation of a compiler for the Mikrojava programming language. The compile
   - The bytecode is disassembled for inspection.
   - The bytecode is executed on the Mikrojava Virtual Machine. Note: Input and output operations will use `input.txt` and `output.txt` respectively.
 
-## Code Example
+## Mikrojava Code Example
 ```java
 program test301 {
-
 	const int nula = 0;
 	const int jedan = 1;
 	const int pet = 5;
