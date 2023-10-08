@@ -51,7 +51,7 @@ Implementation of a compiler for the Mikrojava programming language. The compile
 - **Java Development Kit** 1.8
 - **Log4J** 1.2.17
 - **JFlex** 1.5.0_16-133
-- **CUP** 10
+- **CUP** 10.0
 - **ETF Symboltable** 1.1
 - **ETF MJ Runtime** 1.1
 
