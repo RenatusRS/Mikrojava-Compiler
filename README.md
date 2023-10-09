@@ -105,7 +105,7 @@ program test301 {
 		arr = new int[3];
 		arr[zero] = one;  
 		arr[1] = 2;			
-		arr[arr[jedan]] = arr[arr[0]] * 3; 
+		arr[arr[one]] = arr[arr[0]] * 3; 
 		points = arr[2] / arr[0];
 
 		print(points);
