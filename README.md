@@ -48,7 +48,7 @@ Implementation of a compiler for the Mikrojava programming language. The compile
 ## Tools and Dependencies
 **ETF** libraries are custom libraries specifically made for the **Compiler Construction 1** class. All libraries are located in the `lib` folder. 
 
-- **Java Development Kit** 1.8
+- **JDK** 1.8
 - **Log4J** 1.2.17
 - **JFlex** 1.5.0_16-133
 - **CUP** 10.0
