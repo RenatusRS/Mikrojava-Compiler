@@ -76,51 +76,54 @@ Implementation of a compiler for the Mikrojava programming language. The compile
 ### Step 3: Run the Mikrojava Bytecode
 - Run the `run` job from the `build.xml` file. During this step:
   - The bytecode is disassembled for inspection.
-  - The bytecode is executed on the Mikrojava Virtual Machine. Note: Input and output operations will use `input.txt` and `output.txt` respectively.
+  - The bytecode is executed on the Mikrojava Virtual Machine.
+  - Input operations (`read(...)`) will use `input.txt` to read input. Every line counts as one input to be read.
+  - Output operations (`print(...)`) will use `output.txt` to print output.
 
 ## Mikrojava Code Example
 ```java
 program test301 {
-	const int nula = 0;
-	const int jedan = 1;
-	const int pet = 5;
+	const int zero = 0;
+	const int one = 1;
+	const int five = 5;
 
-	int niz[], niz2[], a, b;
-	char nizch[];
+	int arr[], arr2[], a, b;
+	char arr_char[];
 	
-    {
-	    void main()	
-		    int bodovi;
-		    bool br;
-	    {
-		    bodovi = 0;
-		    bodovi++;
-		    bodovi = bodovi + jedan;
-		    bodovi = bodovi * pet;
-		    bodovi--;
-		    print(bodovi);
+	void main()	
+		int point;
+		bool found;
+	{
+		points = 0;
+		points++;
+		points = points + one;
+		points = points * five;
+		points--;
+
+		print(points);
 				
-		    niz = new int[3];
-		    niz[nula] = jedan;  
-		    niz[1] = 2;			
-		    niz[niz[jedan]] = niz[niz[0]] * 3; 
-		    bodovi = niz[2]/niz[0];
-		    print(bodovi);
-		    print(niz[2]);
+		arr = new int[3];
+		arr[zero] = one;  
+		arr[1] = 2;			
+		arr[arr[jedan]] = arr[arr[0]] * 3; 
+		points = arr[2] / arr[0];
+
+		print(points);
+		print(arr[2]);
 			
-		    br = niz.findAny(jedan + pet);
-		    print(br);
+		found = arr.findAny(one + five);
+		print(found);
 
-		    nizch = new char[3];
-		    nizch[0] = 'a';
-		    nizch[jedan] = 'b';
-		    nizch[pet - 3] = 'c';
-		    print(nizch[1]);
-		    print(nizch[jedan * 2]);
+		arr_char = new char[3];
+		arr_char[0] = 'a';
+		arr_char[one] = 'b';
+		arr_char[five - 3] = 'c';
 
-		    read(bodovi);
-		    bodovi = -bodovi + (pet * a / 2 - jedan) * bodovi - (3 % 2 + 3 * 2 - 3); 
-		    print(bodovi);
-	    }
-    }
+		print(arr_char[1]);
+		print(arr_char[one * 2]);
+
+		read(points);
+		points = -points + (five * a / 2 - one) * points - (3 % 2 + 3 * 2 - 3); 
+		print(points);
+	}
 }
