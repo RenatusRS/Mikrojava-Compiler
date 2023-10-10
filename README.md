@@ -6,7 +6,7 @@
 
 Implementation of a compiler for the Mikrojava programming language. The compiler is designed to convert syntactically and semantically correct Mikrojava programs into Mikrojava bytecode, which can be executed on the Mikrojava Virtual Machine (MJVM).
 
-It uses **JFlex** to handle creation of **Java** code that can recognize patterns and tokens used for lexing and the **Constructor of Useful Parsers (CUP)** to generate **Java** code that can parse input text based on given rules. Semantic analysis and code generation are done by custom made libraries for Mikrojava.
+**JFlex** is used to handle creation of **Java** code that can recognize patterns and tokens used for lexing and the **Constructor of Useful Parsers (CUP)** is used to generate **Java** code that can parse input text based on given rules. Semantic analysis and code generation are done by custom made libraries for Mikrojava.
 
 ## Features and Functionalities
 
