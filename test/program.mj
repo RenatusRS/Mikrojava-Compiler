@@ -17,13 +17,11 @@ program test301
 		br = false;
 
 		if (br) {
-			bodovi = 10;
+			print(10);
 		}
 		else {
-			bodovi = 20;
+			print(20);
 		}
-
-		print(bodovi, 55);
 	}
 }
 

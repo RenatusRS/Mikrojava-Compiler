@@ -21,7 +21,7 @@ public class Compiler {
 	private static final CodeGenerator codeGenerator = new CodeGenerator();
 	
 	private static Program parse() throws Exception {
-		File source = new File("test/program.mj");
+		File source = new File("test/tests/test301.mj");
 		
 		try (Reader br = new BufferedReader(new FileReader(source))) {
 			Yylex lexer = new Yylex(br);
