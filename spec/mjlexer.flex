@@ -80,9 +80,7 @@ import java_cup.runtime.Symbol;
 "}"              { return newSymbol(sym.RBRACE,        yytext()); }
 "=>"             { return newSymbol(sym.LAMBDA,        yytext()); }
 
-"foreach"        { return newSymbol(sym.FOREACH,       yytext()); }
-"findAny"        { return newSymbol(sym.FIND_ANY,      yytext()); }
-"findAndReplace" { return newSymbol(sym.FIND_REPLACE,  yytext()); }
+"union"          { return newSymbol(sym.UNION,         yytext()); }
 
 
 "//"             { yybegin(COMMENT);   }

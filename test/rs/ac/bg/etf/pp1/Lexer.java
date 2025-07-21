@@ -20,7 +20,7 @@ public class Lexer {
 	}
 	
 	private static final String[] tests = {
-			"program.mj",
+			"tests/test301.mj",
 			//"test301.mj",
 			//"test302.mj",
 	};

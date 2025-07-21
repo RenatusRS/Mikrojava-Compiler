@@ -17,7 +17,21 @@ public class Analyzer {
 	}
 	
 	private String formatMessage(String message, SyntaxNode info) {
-		return "Line " + info.getLine() + " [" + info.getClass().getSimpleName() + "]: " + message;
+		// Extract parent information all the way to the root
+		String parentInfo = "";
+		SyntaxNode parent = info;
+		while (parent != null) {
+			if (parent.getParent() == null) {
+				break;
+			}
+			parent = parent.getParent();
+			parentInfo = parent.getClass().getSimpleName() + " -> " + parentInfo;
+		}
+		
+		if (!parentInfo.isEmpty()) {
+			parentInfo = "[" + parentInfo + "]";
+		}
+		return "Line " + info.getLine() + parentInfo + " [" + info.getClass().getSimpleName() + "]: " + message;
 	}
 	
 	private String parenthood(SyntaxNode node) {
@@ -106,6 +120,11 @@ public class Analyzer {
 	}
 	
 	public boolean errorParameterNumberNotMatch(SyntaxNode node, List<Struct> one, List<Struct> two) {
+		if (one == null || two == null) {
+			report_error("One of the parameter lists is null", node);
+			return true;
+		}
+		
 		if (one.size() != two.size()) {
 			report_error("Number of parameters does not match " + one.size() + " != " + two.size(), node);
 			return true;

@@ -324,25 +324,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		analyzer.errorParameterNotMatch(designatorStatement, methodParams, callParams);
 	}
 	
-	public void visit(DesignatorStatementForeach designatorStatement) {
-		Obj designatorObj = designatorStatement.getDesignator().obj;
-		
-		if (designatorObj.getKind() != Obj.Var) {
-			analyzer.report_error("Designator is not a variable", designatorStatement);
-			return;
-		}
-		
-		if (designatorObj.getType().getKind() != Struct.Array) {
-			analyzer.report_error("Designator is not an array", designatorStatement);
-			return;
-		}
-		
-		if (designatorStatement.getDesignator().obj.getType().getElemType() != Tab.intType) {
-			analyzer.report_error("Designator is not an array of type int", designatorStatement);
-			return;
-		}
-	}
-	
 	// ========================================================================
 	// PRINT READ
 	// ========================================================================
@@ -509,18 +490,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	// ========================================================================
 	// CUSTOM FUNCTIONS
 	// ========================================================================
-	
-	public void visit(DesignatorStatementFindAny findAny) {
-		if (findAny.getDesignator().obj.getType() != Tab.boolType) {
-			analyzer.report_error("Designator is not of type bool", findAny);
-			return;
-		}
-		
-		if (findAny.getDesignator1().obj.getType().getKind() != Struct.Array) {
-			analyzer.report_error("Designator is not of type array", findAny);
-			return;
-		}
-	}
 	
 	// ========================================================================
 	// HELPER FUNCTIONS
