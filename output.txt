@@ -1,2 +1,2 @@
-    9    6    6    1bc  -18
-Completion took 2 ms
+                                                     20
+Completion took 1 ms

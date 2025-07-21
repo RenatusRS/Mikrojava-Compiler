@@ -2,72 +2,50 @@
 
 program test301
 
-const int nula = 0;
-const int jedan = 1;
-const int pet = 5;
+	const int nula = 0;
+	const int jedan = 1;
+	const int pet = 5;
 
-int niz[];
-char nizch[];
-
-int a;
-
-set s1, s2, s3;
+	int niz[], niz2[], a, b;
+	char nizch[];
 	
 {
 	void main()	
 		int bodovi;
-		int temp;
+		bool br;
 	{
 		bodovi = 0;
 		bodovi++;
 		bodovi = bodovi + jedan;
 		bodovi = bodovi * pet;
 		bodovi--;
-		print(bodovi); //9
-		print(eol);
+		print(bodovi);
+			
 		
 		niz = new int[3];
-		niz[nula] = 2;
-		niz[jedan] = 3;
-		niz[niz[nula]] = niz[1] * 4;
+		niz[nula] = jedan;  
+		niz[1] = 2;			
+		niz[niz[jedan]] = niz[niz[0]] * 3; 
 		bodovi = niz[2]/niz[0];
-		print(bodovi); //6
-		print(eol);
-		print(niz[2]); //12
-		print(eol);
+		print(bodovi);
+		print(niz[2]);
+		
+		br = niz.findAny(jedan + pet);
+		print(br);
+
 		
 		nizch = new char[3];
 		nizch[0] = 'a';
 		nizch[jedan] = 'b';
 		nizch[pet - 3] = 'c';
-		print(nizch[1]); //b
-		print(eol);
-		print(nizch[jedan * 2]); //c
-		print(eol);
-		print(ord(nizch[0])); //97
+		print(nizch[1]);
+		print(nizch[jedan * 2]);
 			
-		a=1;
+		
 		read(bodovi);
-		bodovi = -bodovi + (pet * a / 2 - nula) * bodovi - (3 % 2 + 3 * 2 - 7); 
-		print(bodovi); //bodovi
-		
-		niz[0] = 1; niz[1] = 2; niz[2] = 3;
-		s1 = new set[5]; s2 = new set[5]; s3 = new set[10];
-		addAll(s1, niz);
-		add(s2, 3); add(s2, 4); add(s2, 5);
-		s3 = s1 union s2;
-		print(s3); //1 2 3 4 5
-		print(eol);
-		
-		niz[0] = 5; niz[1] = 5; niz[2] = 10;
-		s1 = new set[5]; s2 = new set[5]; s3 = new set[10];
-		addAll(s1, niz);
-		read(temp); add(s2, temp);
-		read(temp); add(s2, temp);
-		read(temp); add(s2, temp);
-		s3 = s1 union s2;
-		print(s3); // 5 10 union {3 procitana broja}
-		
+		bodovi = -bodovi + (pet * a / 2 - jedan) * bodovi - (3 % 2 + 3 * 2 - 3); 
+		print(bodovi);
+			
 	}
 }
 

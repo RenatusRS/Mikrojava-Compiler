@@ -60,13 +60,12 @@ terminal INC, DEC;
 terminal SEMI, COLON, COMMA, DOT;
 terminal LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE;
 terminal LAMBDA;
-terminal UNION;
+terminal FOREACH, FIND_ANY, FIND_REPLACE;
 
 terminal Integer NUMBER;
 terminal String IDENT;
 terminal Boolean BOOL;
 terminal Character CHAR;
-terminal Set SET;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName, Designator, DesignatorName;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, ReturnTypes, Factor, MethodVarDecl;
@@ -83,7 +82,6 @@ nonterminal IfBase, ElseBase;
 nonterminal ActPars, ActParsList;
 nonterminal Condition, CondTerm;
 nonterminal AssignOp, RelOp, AddOp, MulOp;
-nonterminal SetOp;
 
 nonterminal MethodVars, MethodVar, MethodVarDeclList;
 
@@ -199,8 +197,10 @@ DesignatorStatement ::= (DesignatorStatementAssign) Designator AssignOp Expr
 	| (DesignatorStatementInc) Designator INC
 	| (DesignatorStatementDec) Designator DEC
 	| (DesignatorStatementFunc) Designator LPAREN ActPars RPAREN
-	| (DesignatorStatementSet) Designator AssignOp SetOp Designator
-// EXAMPLE: a = 5; # a++; # a--; # a(b, c, d);
+	| (DesignatorStatementForeach) Designator DOT FOREACH LPAREN IDENT LAMBDA Statement RPAREN
+	| (DesignatorStatementFindAny) Designator AssignOp Designator DOT FIND_ANY LPAREN Expr RPAREN
+	| (DesignatorStatementFindAndReplace) Designator AssignOp Designator DOT FIND_REPLACE LPAREN Expr COMMA IDENT LAMBDA Expr RPAREN;
+// EXAMPLE: a = 5; # a++; # a--; # a(b, c, d); # a.foreach(b => { ... }); # a = b.findAny(c => c == 5); # a = b.findAndReplace(c => c == 5, d => d + 1);
 
 Designator ::= (DesignatorVar) DesignatorName
 	| (DesignatorArray) DesignatorName LBRACKET Expr RBRACKET;
@@ -303,6 +303,3 @@ MulOp ::= (MulMO) MUL
 	| (DivMO) DIV
 	| (ModMO) MOD;
 // EXAMPLE: * # / # %
-
-SetOp ::= (SetSO) UNION;
-// EXAMPLE: UNION

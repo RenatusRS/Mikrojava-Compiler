@@ -1,6 +1,6 @@
 //Test 303
 
-program test303
+program test_303
 
 const int cinilac = 4, delilac = 3;
 
@@ -9,6 +9,7 @@ class Predmet
 	 int tezina;
 	 char vrsta;
 	{
+		 
 		 void postaviTezinu(int tezina) {this.tezina = tezina;}  
 		 void ucitajTezinu() { read(tezina); }
 		 int zapremina() { return 0;}
@@ -17,8 +18,8 @@ class Predmet
 		 char dohvVrstu() { return vrsta; }
 		 int dohvTezinu() { return tezina; }
 		 void ispisi() {
-			print(vrsta);
-			print(Q());
+		 	print(vrsta);
+		 	print(Q());
 		 }
 	}
 }
@@ -27,14 +28,23 @@ class Sfera extends Predmet
 {
 	int r;
 	{
+		Sfera() {
+		  vrsta = 's';
+		  r = 1;
+		}
+		
+		Sfera(int r) {
+			vrsta = 's';
+			this.r = r;
+		}
 		
 		 void postaviPoluprecnik(int r) {this.r = r; }
-			 
+		 
 		 int zapremina()
 			int z;
 		{
 			z = cinilac;
-			return z *((r*r*r)/delilac);
+			return z *(r/delilac);
 		}
 
 	}
@@ -44,6 +54,26 @@ class Kvadar extends Predmet
 {
 	 int a, b, c;
 	{
+		Kvadar() {
+		  vrsta = 'k';
+		  a = 1;
+		  b = 2;
+		  c = 3;
+		}
+
+		Kvadar(int a, int b, int c) {
+		  vrsta = 'k';
+		  this.a = a;
+		  this.b = b;
+                  this.c = c;
+		}
+		
+		Kvadar(int a) {
+		  vrsta = 'k';
+		  this.a = a;
+		  b = a + 1;
+                  c = a + 2;
+		}
 		
 		 void postaviStranice(int a, int b, int c) {this.a = a; this.b = b; this.c = c;}
 		 int zapremina()
@@ -56,80 +86,27 @@ class Kvadar extends Predmet
 	}
 }
 
-interface Displayable{
-	
-	void display(){
-		print('N'); print('O'); print('T'); print(' '); print('I'); print('M'); print('P'); print('L'); print('E'); print('M'); print('E'); print('N'); print('T'); print('E'); print('D'); print(eol);
-	}
-	
-	int height();
-
-}
-
-class Dot extends Displayable{
-
-	int h;
-	{
-		void display(){
-			print(' '); print('O'); print('O'); print(' '); print(eol);
-			print('O'); print('O'); print('O'); print('O'); print(eol);
-			print('O'); print('O'); print('O'); print('O'); print(eol);
-			print(' '); print('O'); print('O'); print(' '); print(eol);
-		}
-		
-		int height(){
-			return h;
-		}
-		
-	}
-}
-
-class Dash extends Displayable{
-
-	int h;
-	{
-	
-		int height(){
-			return h;
-		}
-		
-	}
-}
-
 int zapreminaK, zapreminaS;
 int tezinaK, tezinaS;
 {
 
-	void ispis(Predmet p)
+	void ispis( Predmet p)
 	{
 		p.ispisi();
 		print(eol); 
 		print(p.dohvTezinu());
 	}
 		
-	void main() Predmet predmeti[]; int i; Sfera s1, s2, s3; Kvadar k1, k2, k3; int t; Displayable d1, d2;
-	{
-		
+	void main() Predmet predmeti[]; int i; Sfera s1, s2, s3; Kvadar k1, k2, k3; int t;
+	{	
 		predmeti = new Predmet[6];
 		s1 = new Sfera();
-		s1.postaviPoluprecnik(3);
-		s1.postaviVrstu('s');
-		s2 = new Sfera();
-		s2.postaviPoluprecnik(5);
-		s2.postaviVrstu('s');
-		s3 = new Sfera();
-		s3.postaviPoluprecnik(7);
-		s3.postaviVrstu('s');
+		s2 = new Sfera(2);
+		s3 = new Sfera(3);
 		
 		k3 = new Kvadar();
-		k3.postaviStranice(3,5,7);
-		k3.postaviVrstu('k');
-		k1 = new Kvadar();
-		k1.postaviStranice(5,8,9);
-		k1.postaviVrstu('k');
-		k2 = new Kvadar();
-		k2.postaviStranice(6,8,10);
-		k2.postaviVrstu('k');
+		k1 = new Kvadar(2);
+		k2 = new Kvadar(3,4,5);
 		
 		predmeti[0] = s1;
 		predmeti[2] = s2;
@@ -139,58 +116,44 @@ int tezinaK, tezinaS;
 		predmeti[5] = k3;
 
 		read(t);
-		i = 0;
-		do {
-			predmeti[i].postaviTezinu(t);
-		} while(i < 5, i++);
+		i=0;
+		while(i<6){
+			predmeti[i].postaviTezinu(t); 	
+			i++;
+		}
 		
 		zapreminaS = 0;
 		tezinaS = 0;
-		i = 0;
-		do {
-			if(i % 2 == 1) {
-				i++;
-				continue; 
-			}
-			if(i == 6){
-				break;
-			}
-			zapreminaS = zapreminaS + predmeti[i].zapremina();
-			tezinaS = tezinaS + predmeti[i].Q();
-			ispis(predmeti[i]);
-			i++;
-		} while ();
-		
-		
-		zapreminaK = 0; 
-		tezinaK = 0;
-		i = 0;
-		do {
+		i = 1;
+		while(i<6){
 			if(i % 2 == 0) {
 				i++;
 				continue; 
 			}
-			if(i == 7){
-				break;
-			}
-			zapreminaK = zapreminaK + predmeti[i].zapremina();
-			tezinaK = tezinaK + predmeti[i].Q();
-			ispis(predmeti[i]);
+			zapreminaS = zapreminaS + predmeti[i - 1].zapremina();
+			tezinaS = tezinaS + predmeti[i - 1].Q();
+			ispis(predmeti[i - 1]);
 			i++;
-		} while ();
+		}
 		
-		print(zapreminaS); print(eol); //659(656 sa zaokruzivanjem pri deljenju)
-		print(zapreminaK); print(eol); //945
-		print(tezinaS); print(eol); //659(656 sa zaokruzivanjem pri deljenju) * tezina
-		print(tezinaK); print(eol); //945 * tezina
 		
-		d1 = new Dot();
-		d2 = new Dash();
+		zapreminaK = 0; 
+		tezinaK = 0;
+		i = 1;
+		while(i<6){
+			if(i % 2 == 1) {
+				i++;
+				continue; 
+			}
+			zapreminaS = zapreminaS + predmeti[i - 1].zapremina();
+			tezinaS = tezinaS + predmeti[i - 1].Q();
+			ispis(predmeti[i - 1]);
+			i++;
+		}
 		
-		print(d1.height()); print(eol);
-		d1.display();
-		print(d2.height()); print(eol);
-		d2.display();
-
+		print(zapreminaS); print(eol);
+		print(zapreminaK); print(eol);
+		print(tezinaS); print(eol);
+		print(tezinaK); print(eol);
 	}
 }

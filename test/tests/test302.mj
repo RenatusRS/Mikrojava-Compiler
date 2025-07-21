@@ -2,66 +2,65 @@
 
 program test302
 
+const int jedan = 1;
+
 int i;
 bool ibool;
 
-int niz2;
+int niz2[];
 
 int niz[];
-int a;
+int a, curr;
 
 {
-	int sum(int z, int d){
-		return z + d;
-	}	
 
-	int inkrement(int a, int inc) 
-		int pom; 
+	int sum(int z, int d)
 	{
-		if(inc == 1) pom = 1;
+		return z + d;
+	}
+
+
+	int inkrement(int a, int inc)
+		int pom;
+	{
+		if(inc == jedan) pom = 1;
 		else if(inc == 2) pom = a;
 
 		return sum(a,pom);
 	}
-	
+
 	bool verify() {
 		print('v');
 		return false;
 	}
 
-	int f1(int arg){
-		print(arg); print(eol);
-		return arg * 2;
-	}
-	
 	void main()
 	{
-		
+
 		if(1!=1) print(-6);
 		else print(0);
-		print(eol); //0
-			
+
 		ibool = false;
 		i = 0;
-		do{
+		while(i < 5){
 			if(i == 2) ibool = true;
-		} while( i < 4, i++);
-		
+			i++;
+		}
+
 		if(ibool)
-			if(i == 4) print(1); //1
-			else print(-1); 
-			
-		a = 2;	
+			if(i == 5) print(1);
+			else print(-1);
+		a = 2;
 		niz = new int[3];
 		niz[0] = 1 * a;
 		niz[1] = 2 * a;
 		niz[2] = sum(niz[1], niz[0]) * a + 1;
-		if(verify() || niz[2] == 4) print(ord('A')); 
-		else print(ord('a')); //a
+		if(verify() || niz[2] == 4) print(ord('A'));
+		else print(ord('a'));
+
 		print(eol);
-		
 		i = 0;
-		do{
+		while (i < 10) {
 			if(i == 3)
 			{
 				i++;
@@ -69,46 +68,30 @@ int a;
 			}
 			if(i == 4) break;
 			i = inkrement(i, 1);
-		} while(i < 10);
-		
+		}
+
 		if(i == 3 && verify()) print(-4);
-		else print(4);  //4
-		
+		else print(4);
+
 		read(niz[0]);
 		read(niz[1]);
 		read(niz[2]);
 		print(eol);
-		print(sum(sum(niz[0], niz[1]), niz[2])); //suma procitanih brojeva
-		print(eol); 
-		print(inkrement(niz[2], 2)); //2*niz[2]
+		print(sum(sum(niz[0], niz[1]), niz[2]));
+
 		print(eol);
-		
+		print(inkrement(niz[2], 2));
+
 		a = 3;
 		i = 0;
-		do {
+		while (i < 3){
 			niz[i] = niz[i] * 2 * a;
-		} while(i < 2, i++);
-		
-		i = 0;
-		do
-			print(niz[i]);
-		while (i < 2, i++);
-		print(eol);
-		
-		niz2 = 0;
-		i = 0;
-		do
-			niz2 = niz2 + niz[i] * niz[i];
-		while ( i < 2, i++);
-		print(niz2);
-		print(eol);
-		
-		niz[0] = 1; niz[1] = 2; niz[2] = 3;
-		i = f1 map niz; // 1 2 3 
-		print(i); print(eol); // 12
-		i = f1(f1 map niz); // 1 2 3 12
-		print(i); print(eol); // 24
-	
+			i++;
+		}
+		niz[1] = 6;
+		niz.foreach(curr => print(curr););
+		niz2 = niz.findAndReplace(jedan + 5, curr => curr * 3);
+		niz2.foreach(curr => print(curr););
 	}
 }
 

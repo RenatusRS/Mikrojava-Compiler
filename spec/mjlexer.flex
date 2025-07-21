@@ -33,7 +33,7 @@ import java_cup.runtime.Symbol;
 "\t"   { }
 "\r\n" { }
 "\f"   { }
-
+      
 "program"        { return newSymbol(sym.PROG,          yytext()); }
 "break"          { return newSymbol(sym.BREAK,         yytext()); }
 "class"          { return newSymbol(sym.CLASS,         yytext()); }
@@ -80,9 +80,9 @@ import java_cup.runtime.Symbol;
 "}"              { return newSymbol(sym.RBRACE,        yytext()); }
 "=>"             { return newSymbol(sym.LAMBDA,        yytext()); }
 
-"union"         { return newSymbol(sym.UNION,         yytext()); }
-"do" 		    { return newSymbol(sym.DO,            yytext()); }
-
+"foreach"        { return newSymbol(sym.FOREACH,       yytext()); }
+"findAny"        { return newSymbol(sym.FIND_ANY,      yytext()); }
+"findAndReplace" { return newSymbol(sym.FIND_REPLACE,  yytext()); }
 
 
 "//"             { yybegin(COMMENT);   }
