@@ -53,40 +53,6 @@ public class CodeGenerator extends VisitorAdaptor {
 	Stack<Integer> fixUps = new Stack<>();
 	
 	// ======================================== //
-	// PRINT READ
-	// ======================================== //
-	
-	public void visit(PrintStatementOptionalNo printStatementOptional) {
-		analyzer.report_info("PRINT NO OPTIONAL", printStatementOptional);
-		
-		if (printStatementOptional.getExpr().struct == Tab.charType) {
-			Code.loadConst(1);
-			Code.put(Code.bprint);
-		} else {
-			Code.loadConst(5);
-			Code.put(Code.print);
-		}
-	}
-	
-	public void visit(PrintStatementOptionalYes printStatementOptional) {
-		analyzer.report_info("PRINT YES OPTIONAL", printStatementOptional);
-		
-		Code.loadConst(printStatementOptional.getWidth());
-		
-		int code = printStatementOptional.getExpr().struct == Tab.charType ? Code.bprint : Code.print;
-		Code.put(code);
-	}
-	
-	public void visit(ReadStmt readStmt) {
-		analyzer.report_info("READ", readStmt);
-		
-		int code = readStmt.getDesignator().obj.getType() == Tab.charType ? Code.bread : Code.read;
-		
-		Code.put(code);
-		Code.store(readStmt.getDesignator().obj);
-	}
-	
-	// ======================================== //
 	// CONST LOAD
 	// ======================================== //
 	

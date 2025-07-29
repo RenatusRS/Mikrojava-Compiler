@@ -51,7 +51,7 @@ scan with {:
 	return s;
 :}
 
-terminal PROG, BREAK, CLASS, ELSE, CONST, IF, WHILE, NEW, PRINT, READ, RETURN, VOID, EXTENDS, CONTINUE, MAP;
+terminal PROG, BREAK, ELSE, CONST, IF, WHILE, NEW, RETURN, VOID, CONTINUE, MAP;
 terminal PLUS, MINUS, MUL, DIV, MOD;
 terminal EQUAL, NOT_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL;
 terminal AND, OR;
@@ -70,12 +70,11 @@ terminal Set SET;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName, Designator, DesignatorName;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, ReturnTypes, Factor, MethodVarDecl;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct ConstValue, Term, Expr, CondFact, PrintStatementOptional;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct ConstValue, Term, Expr, CondFact;
 
 nonterminal ProgDeclList, ProgDecl;
 nonterminal ConstDeclList, ConstDecl;
 nonterminal VarDeclList, VarDecl;
-nonterminal ClassDecl, ConstructorDecl;
 nonterminal MethodDeclList, FormPars, FormParsList, FormPar;
 nonterminal StatementList, Statement, DesignatorStatement;
 nonterminal IfStatement, WhileStatement;
@@ -104,7 +103,7 @@ ProgDeclList ::= ProgDeclList ProgDecl
 
 ProgDecl ::= (ProgConstDeclarations) CONST Type:constDecl ConstDeclList SEMI
 	| (ProgVarDeclarations) Type:varDecl VarDeclList SEMI;
-// EXAMPLE: const int a = 5, b = 6, c = 7; int a, b, c; class A extends B { ... }
+// EXAMPLE: const int a = 5, b = 6, c = 7; int a, b, c
 
 
 // CONST DECLARATION LIST
@@ -177,9 +176,7 @@ Statement ::= (DesignatorStmt) DesignatorStatement SEMI
 	| (IfStmt) IfBase LPAREN Condition RPAREN Statement
 	| (ElseStmt) IfBase LPAREN Condition RPAREN Statement ElseBase Statement
 	| (ReturnStmt) RETURN ReturnItem SEMI
-	| (PrintStmt) PRINT LPAREN PrintStatementOptional RPAREN SEMI
 	| (WhileStmt) WhileTrigger LPAREN Condition RPAREN Statement
-	| (ReadStmt) READ LPAREN Designator RPAREN SEMI
 	| (BreakStmt) BREAK SEMI
     | (ContinueStmt) CONTINUE SEMI
 	| LBRACE StatementList RBRACE;
@@ -187,9 +184,7 @@ Statement ::= (DesignatorStmt) DesignatorStatement SEMI
 //   a = 5;
 //   if (a == 5) a = 6;
 //   return a;
-//   print(a);
 //   while (a == 5) a = 6;
-//   read(a);
 //   break;
 //   continue;
 //   // { a = 5; b = 6; c = 7; }
@@ -228,9 +223,6 @@ WhileTrigger ::= (WhileTrigger) WHILE;
 ReturnItem ::= (ReturnItemExpr) Expr
 	| (ReturnItemVoid) ;
 // EXAMPLE: 5 # {{empty}}
-
-PrintStatementOptional ::= (PrintStatementOptionalYes) Expr COMMA NUMBER:width
-	| (PrintStatementOptionalNo) Expr;
 
 // CONDITIONS
 Condition ::= (ConditionTerm) CondTerm
@@ -305,4 +297,4 @@ MulOp ::= (MulMO) MUL
 // EXAMPLE: * # / # %
 
 SetOp ::= (SetSO) UNION;
-// EXAMPLE: UNION
+// EXAMPLE: union

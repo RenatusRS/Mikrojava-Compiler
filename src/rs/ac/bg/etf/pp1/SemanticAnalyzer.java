@@ -4,21 +4,21 @@ import rs.ac.bg.etf.pp1.ast.*;
 import rs.ac.bg.etf.pp1.util.Analyzer;
 import rs.etf.pp1.mj.runtime.Code;
 import rs.etf.pp1.symboltable.concepts.Obj;
-
-
 import rs.etf.pp1.symboltable.concepts.Struct;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Stack;
 
 public class SemanticAnalyzer extends VisitorAdaptor {
 	
 	private final Analyzer analyzer = new Analyzer(MJParser.class);
+	private final Stack<List<Struct>> methodCalls = new Stack<>();
+	private final HashMap<Obj, List<Struct>> methods = new HashMap<>();
 	private Obj currentMethod = Tab.noObj;
 	private Struct requiredType = null;
 	private int whileDepth = 0;
-	
-	private final Stack<List<Struct>> methodCalls = new Stack<>();
-	private final HashMap<Obj, List<Struct>> methods = new HashMap<>();
 	
 	public SemanticAnalyzer() {
 		Tab.init();
@@ -30,8 +30,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		if (analyzer.isErrorDetected()) throw new Exception("Semantic analysis failed");
 	}
 	
-
-
+	
 	// ========================================================================
 	// PROGRAM
 	// ========================================================================
@@ -54,10 +53,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Obj typeNode = Tab.find(type.getTypeName());
 		type.struct = Tab.noType; // just for error handling
 		
-		if (
-			analyzer.errorNotExists(type, type.getTypeName()) ||
-			analyzer.errorObjWrongKind(type, type.getTypeName(), Obj.Type)
-		) return;
+		if (analyzer.errorNotExists(type, type.getTypeName()) || analyzer.errorObjWrongKind(type, type.getTypeName(), Obj.Type)) return;
 		
 		type.struct = typeNode.getType();
 		requiredType = type.struct;
@@ -128,8 +124,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		factor.struct = designatorObj.getType();
 		
 		if (
-			analyzer.errorNotExists(factor, designatorObj.getName()) ||
-			analyzer.errorObjWrongKind(factor, designatorObj.getName(), Obj.Meth)
+				analyzer.errorNotExists(factor, designatorObj.getName()) ||
+						analyzer.errorObjWrongKind(factor, designatorObj.getName(), Obj.Meth)
 		) return;
 		
 		List<Struct> methodParams = methods.get(designatorObj);
@@ -162,7 +158,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		expr.struct = Tab.noType;
 		
 		Obj designator = expr.getDesignator().obj;
-		
 		
 		
 		if (designator.getKind() != Obj.Var) {
@@ -212,7 +207,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 		if (!condFact.getExpr().struct.compatibleWith(condFact.getExpr1().struct)) {
 			analyzer.report_error("Condition expression types do not match (left: '" + structToString(condFact.getExpr().struct) + "', right: '" + structToString(condFact.getExpr1().struct) + "')", condFact);
-			return;
 		}
 	}
 	
@@ -248,7 +242,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		designator.obj = Tab.find(designator.getDesignatorName().getName());
 		
 		if (
-			analyzer.errorNotExists(designator, designator.getDesignatorName().getName())
+				analyzer.errorNotExists(designator, designator.getDesignatorName().getName())
 		) return;
 		
 		if (designator.obj.getType().getKind() != Struct.Array) {
@@ -278,7 +272,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 		if (designatorObj.getType() != Tab.intType) {
 			analyzer.report_error("Designator is not of type int", designatorStatement);
-			return;
 		}
 	}
 	
@@ -292,7 +285,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 		if (designatorObj.getType() != Tab.intType) {
 			analyzer.report_error("Designator is not of type int", designatorStatement);
-			return;
 		}
 	}
 	
@@ -306,7 +298,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 		if (!designatorStatement.getExpr().struct.assignableTo(designatorStatementObj.getType())) {
 			analyzer.report_error("Designator is not of the same type as expression", designatorStatement);
-			return;
 		}
 	}
 	
@@ -322,38 +313,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		List<Struct> callParams = methodCalls.pop();
 		
 		analyzer.errorParameterNotMatch(designatorStatement, methodParams, callParams);
-	}
-	
-	// ========================================================================
-	// PRINT READ
-	// ========================================================================
-
-	public void visit(PrintStmt printStmt) {
-		Struct exprType = printStmt.getPrintStatementOptional().struct;
-		if (!Arrays.asList(Tab.intType, Tab.charType, Tab.boolType).contains(exprType)) {
-			analyzer.report_error("Print statement expression is not of type int, char or bool", printStmt);
-			return;
-		}
-	}
-	
-	public void visit(PrintStatementOptionalYes printStatement) {
-		 printStatement.struct = printStatement.getExpr().struct;
-	}
-	
-	public void visit(PrintStatementOptionalNo printStatement) {
-		printStatement.struct = printStatement.getExpr().struct;
-	}
-	
-	public void visit(ReadStmt statement) {
-		if (statement.getDesignator().obj.getKind() != Obj.Var) {
-			analyzer.report_error("Read statement designator is not a variable", statement);
-			return;
-		}
-		
-		if (!Arrays.asList(Tab.intType, Tab.charType, Tab.boolType).contains(statement.getDesignator().obj.getType())) {
-			analyzer.report_error("Read statement designator is not of type int, char or bool", statement);
-			return;
-		}
 	}
 	
 	// ========================================================================
@@ -373,7 +332,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 		if (!currentMethod.getType().assignableTo(returnItem.getExpr().struct)) {
 			analyzer.report_error("Return expression is not of the same type as method", returnItem);
-			return;
 		}
 	}
 	
@@ -385,7 +343,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 		if (currentMethod.getType() != Tab.noType) {
 			analyzer.report_error("Return expression in non-void method", returnItem);
-			return;
 		}
 	}
 	
@@ -404,14 +361,12 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	public void visit(BreakStmt breakStmt) {
 		if (whileDepth == 0) {
 			analyzer.report_error("Break statement outside of while loop", breakStmt);
-			return;
 		}
 	}
 	
 	public void visit(ContinueStmt continueStmt) {
 		if (whileDepth == 0) {
 			analyzer.report_error("Continue statement outside of while loop", continueStmt);
-			return;
 		}
 	}
 	
@@ -471,7 +426,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			analyzer.report_error("Method variable '" + methodVar.getName() + "' already declared", methodVar);
 			return;
 		}
-
+		
 		Tab.insert(Obj.Var, methodVar.getName(), new Struct(Struct.Array, requiredType));
 	}
 	
@@ -510,7 +465,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			case Struct.Bool:
 				return "Bool";
 			case Struct.Enum:
-				return "Enum";
+				return "Set";
 			case Struct.Interface:
 				return "Interface";
 			
@@ -551,5 +506,5 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		return objToString(obj.getKind());
 	}
 	
-
+	
 }

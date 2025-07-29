@@ -25,13 +25,16 @@ public class Analyzer {
 				break;
 			}
 			parent = parent.getParent();
+			
+			// Don't include if it has 'Derived' in its name
+			if (parent.getClass().getSimpleName().contains("Derived")) {
+				continue;
+			}
+
 			parentInfo = parent.getClass().getSimpleName() + " -> " + parentInfo;
 		}
 		
-		if (!parentInfo.isEmpty()) {
-			parentInfo = "[" + parentInfo + "]";
-		}
-		return "Line " + info.getLine() + parentInfo + " [" + info.getClass().getSimpleName() + "]: " + message;
+		return "Line " + info.getLine() + " [" + parentInfo +  info.getClass().getSimpleName() + "]: " + message;
 	}
 	
 	private String parenthood(SyntaxNode node) {
