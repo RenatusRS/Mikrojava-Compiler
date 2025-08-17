@@ -2,28 +2,35 @@
 
 program test301
 
-	const int nula = 0;
-	const int jedan = 1;
-	const int pet = 5;
+const int nula = 0;
+const int jedan = 1;
+const int pet = 5;
 
-	int niz[], niz2[], a, b;
-	char nizch[];
+int niz[];
+char nizch[];
+
+int a;
+char b;
+
+set s1, s2, s3;
 
 {
 	void main()
 		int bodovi;
-		bool br;
+		int temp;
 	{
-		br = false;
+		niz = new int[6];
 
-		if (br) {
-			bodovi = 10;
-		}
-		else {
-			bodovi = 20;
-		}
+		//niz[0] = 1; niz[1] = 2; niz[2] = 3;
+		//s1 = new set[5]; // s2 = new set[5]; s3 = new set[10];
+		a = 1;
+		b = chr(a); //0
+		// print(s3); //1 2 3 4 5
 
-		print(bodovi, 55);
+		// print(s3); //1 2 3 4 5
+
+
+		//print(eol);
 	}
 }
 

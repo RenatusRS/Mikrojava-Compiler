@@ -21,7 +21,7 @@ public class Compiler {
 	private static final CodeGenerator codeGenerator = new CodeGenerator();
 	
 	private static Program parse() throws Exception {
-		File source = new File("test/tests/test301.mj");
+		File source = new File("test/program.mj");
 		
 		try (Reader br = new BufferedReader(new FileReader(source))) {
 			Yylex lexer = new Yylex(br);
@@ -59,11 +59,11 @@ public class Compiler {
 			log.info("Code generation started...");
 			log.info("===================================");
 			
-			// codeGenerator.compile(prog);
+			codeGenerator.compile(prog);
 			
-			// log.info("===================================");
-			// log.info("Code generation finished!");
-			// log.info("===================================");
+			log.info("===================================");
+			log.info("Code generation finished!");
+			log.info("===================================");
 			
 		} catch (Exception e) {
 			log.error("===================================");

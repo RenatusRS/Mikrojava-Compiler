@@ -7,7 +7,6 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Stack;
 
 import static rs.etf.pp1.mj.runtime.Code.eq;
@@ -28,6 +27,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	public void visit(ProgName progName) {
 		Tab.find("chr").setAdr(Code.pc);
 		Tab.find("ord").setAdr(Code.pc);
+		
 		Code.put(Code.enter);
 		
 		Code.put(1);
@@ -37,7 +37,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(Code.exit);
 		Code.put(Code.return_);
 		
-		Tab.find("len").setAdr(0);
+		Tab.find("len").setAdr(Code.pc);
 		
 		Code.put(Code.enter);
 		
@@ -48,16 +48,68 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(Code.arraylength);
 		Code.put(Code.exit);
 		Code.put(Code.return_);
+		
+		Obj ta  = Tab.find("add");
+		ta.setAdr(Code.pc);
+		
+		Code.put(Code.enter);
+		
+		Code.put(Code.load_n);
+		
+		Code.put(Code.exit);
+		Code.put(Code.return_);
 	}
 	
 	Stack<Integer> fixUps = new Stack<>();
+	
+	// ======================================== //
+	// PRINT READ
+	// ======================================== //
+	
+	public void visit(PrintStatementOptionalNo printStatementOptional) {
+		if (printStatementOptional.getExpr().struct == Tab.charType) {
+			analyzer.report_info(printStatementOptional, "CODE LOAD CONST: 1");
+			Code.loadConst(1);
+			analyzer.report_info(printStatementOptional, "CODE PUT: BPRINT");
+			Code.put(Code.bprint);
+		} else if (printStatementOptional.getExpr().struct == Tab.intType) {
+			analyzer.report_info(printStatementOptional, "CODE LOAD CONST: 5");
+			Code.loadConst(1);
+			analyzer.report_info(printStatementOptional, "CODE PUT: PRINT");
+			Code.put(Code.print);
+		} else if (printStatementOptional.getExpr().struct == Tab.setType) {
+			analyzer.report_info(printStatementOptional, "CODE LOAD CONST: 1");
+			// TODO for set type
+		} else {
+			analyzer.report_error(printStatementOptional, "Unsupported type for print statement");
+		}
+	}
+	
+	public void visit(PrintStatementOptionalYes printStatementOptional) {
+		analyzer.report_info(printStatementOptional, "CODE LOAD CONST: " + printStatementOptional.getWidth());
+		Code.loadConst(printStatementOptional.getWidth());
+		
+		int code = printStatementOptional.getExpr().struct == Tab.charType ? Code.bprint : Code.print;
+		analyzer.report_info(printStatementOptional, "CODE PUT: " + codeToString(code));
+		Code.put(code);
+	}
+	
+	public void visit(ReadStmt readStmt) {
+		int code = readStmt.getDesignator().obj.getType() == Tab.charType ? Code.bread : Code.read;
+		
+		analyzer.report_info(readStmt, "CODE PUT: " + codeToString(code));
+		Code.put(code);
+		analyzer.report_info(readStmt, "CODE STORE: " + readStmt.getDesignator().obj.getName());
+		Code.store(readStmt.getDesignator().obj);
+	}
+	
 	
 	// ======================================== //
 	// CONST LOAD
 	// ======================================== //
 	
 	public void visit(ConstInt constInt) {
-		analyzer.report_info(constInt.getN1().toString(), constInt);
+		analyzer.report_info(constInt, "LOAD CONST: " + constInt.getN1());
 		
 		Obj con = Tab.insert(Obj.Con, "$", constInt.struct);
 		con.setLevel(0);
@@ -67,7 +119,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(ConstChar constChar) {
-		analyzer.report_info(constChar.getC1().toString(), constChar);
+		analyzer.report_info(constChar, constChar.getC1().toString());
 		
 		Obj con = Tab.insert(Obj.Con, "$", constChar.struct);
 		con.setLevel(0);
@@ -77,7 +129,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(ConstBool constBool) {
-		analyzer.report_info(constBool.getB1() ? "True" : "False", constBool);
+		analyzer.report_info(constBool, constBool.getB1() ? "True" : "False");
 		
 		Obj con = Tab.insert(Obj.Con, "$", constBool.struct);
 		con.setLevel(0);
@@ -103,7 +155,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		CounterVisitor.FormParamCounter formParCnt = new CounterVisitor.FormParamCounter();
 		methodNode.traverseTopDown(formParCnt);
 		
-		analyzer.report_info("BEGIN " + methodTypeName.getName() + " | PARS: " + formParCnt.getCount() + ", VARS: " + varCnt.getCount(), methodTypeName);
+		analyzer.report_info(methodTypeName, "BEGIN " + methodTypeName.getName() + " | PARS: " + formParCnt.getCount() + ", VARS: " + varCnt.getCount());
 		
 		Code.put(Code.enter);
 		Code.put(formParCnt.getCount());
@@ -111,7 +163,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(MethodDecl methodDecl) {
-		analyzer.report_info("END " + methodDecl.getMethodTypeName().getName(), methodDecl);
+		analyzer.report_info(methodDecl, "END " + methodDecl.getMethodTypeName().getName());
 		
 		Code.put(Code.exit);
 		Code.put(Code.return_);
@@ -122,7 +174,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	
 	public void visit(DesignatorStatementInc designatorStatement) {
-		analyzer.report_info("INC", designatorStatement);
+		analyzer.report_info(designatorStatement, "INC");
 		
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
@@ -132,7 +184,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(DesignatorStatementDec designatorStatement) {
-		analyzer.report_info("DEC", designatorStatement);
+		analyzer.report_info(designatorStatement, "DEC");
 		
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
@@ -142,7 +194,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(DesignatorStatementAssign designatorStatement) {
-		analyzer.report_info("ASSIGN", designatorStatement);
+		analyzer.report_info(designatorStatement, "ASSIGN TO: " + designatorStatement.getDesignator().obj.getName());
 		
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
@@ -151,9 +203,12 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	
 	public void visit(DesignatorName designatorName) {
-		if (designatorName.getParent() instanceof DesignatorVar) return;
+		if (designatorName.getParent() instanceof DesignatorVar) {
+			analyzer.report_info(designatorName, "SKIPPING LOAD FOR PARENT " + designatorName.getParent().getClass().getSimpleName());
+			return;
+		}
 		
-		analyzer.report_info("DESIGNATOR LOAD", designatorName);
+		analyzer.report_info(designatorName, "DESIGNATOR LOADED FROM: " + designatorName.obj.getName());
 		
 		Code.load(designatorName.obj);
 	}
@@ -162,25 +217,39 @@ public class CodeGenerator extends VisitorAdaptor {
 		SyntaxNode parent = designator.getParent();
 		
 		if (parent instanceof DesignatorStatementInc) {
-			analyzer.report_info("VAR LOAD: Inc", designator);
+			analyzer.report_info(designator, "VAR LOAD: Inc");
 			Code.load(designator.obj);
 		} else if (parent instanceof DesignatorStatementDec) {
-			analyzer.report_info("VAR LOAD: Dec", designator);
+			analyzer.report_info(designator, "VAR LOAD: Dec");
 			Code.load(designator.obj);
 		} else if (parent instanceof FactorVar) {
-			analyzer.report_info("VAR LOAD: FactorVar", designator);
+			analyzer.report_info(designator, "VAR LOAD: FactorVar");
 			Code.load(designator.obj);
-		} else analyzer.report_info("VAR LOAD SKIP", designator);
+		} else analyzer.report_info(designator, "VAR LOAD SKIP");
 	}
 	
 	public void visit(DesignatorArray designator) {
 		if (designator.getParent() instanceof FactorVar) {
-			analyzer.report_info("ARRAY LOAD: FactorVar", designator);
+			analyzer.report_info(designator, "ARRAY LOAD: FactorVar");
 			Code.load(designator.obj);
-		} else analyzer.report_info("ARRAY LOAD SKIP", designator);
+		} else analyzer.report_info(designator, "ARRAY LOAD SKIP");
 	}
 	
 	public void visit(DesignatorStatementFunc designatorStatement) {
+		analyzer.report_info(designatorStatement, "FUNC CALL: " + designatorStatement.getDesignator().obj.getName());
+		
+		Obj func = designatorStatement.getDesignator().obj;
+		
+		if (func.getType() == Tab.noType) {
+			analyzer.report_error(designatorStatement, "Function '" + func.getName() + "' has no return type");
+		}
+		
+		Code.put(Code.call);
+		Code.put2(func.getAdr());
+		
+		if (func.getType() != Tab.noType) {
+			Code.put(Code.pop);
+		}
 	}
 	
 	// ======================================== //
@@ -191,19 +260,28 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(ReturnStmt statement) {
-		analyzer.report_info("RETURN", statement);
+		analyzer.report_info(statement, "RETURN");
 		
 		Code.put(Code.exit);
 		Code.put(Code.return_);
 	}
 	
-	public void visit(FactorArray factor) {
-		boolean isChar = factor.struct.getElemType() == Tab.charType;
-		
-		analyzer.report_info("NEW ARRAY: " + (isChar ? "Char" : "Not Char"), factor);
-		
-		Code.put(Code.newarray);
-		Code.put(isChar ? 0 : 1);
+	public void visit(FactorNewArray factor) {
+		if (factor.struct.getElemType() == Tab.charType) {
+			analyzer.report_info(factor, "ARRAY CREATE: Char");
+			Code.put(Code.newarray);
+			Code.put( 1);
+		} else if (factor.struct.getElemType() == Tab.intType) {
+			analyzer.report_info(factor, "ARRAY CREATE: Int");
+			Code.put(Code.newarray);
+			Code.put(0);
+		} else if (factor.struct == Tab.setType) {
+			analyzer.report_info(factor, "ARRAY CREATE: Set");
+			Code.put(Code.const_1);
+			Code.put(Code.add);
+			Code.put(Code.newarray);
+			Code.put(0);
+		}
 	}
 	
 	// ======================================== //
@@ -215,15 +293,14 @@ public class CodeGenerator extends VisitorAdaptor {
 		
 		boolean isPlus = operation instanceof PlusAO;
 		
-		analyzer.report_info("ADD: " + (isPlus ? "Plus" : "Minus"), expr);
+		analyzer.report_info(expr, "ADD: " + (isPlus ? "Plus" : "Minus"));
 		
 		int code = isPlus ? Code.add : Code.sub;
 		Code.put(code);
 	}
 	
 	public void visit(ExprMinus expr) {
-		analyzer.report_info("UNARY MINUS", expr);
-		
+		analyzer.report_info(expr, "UNARY MINUS");
 		Code.put(Code.neg);
 	}
 	
@@ -234,7 +311,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		
 		String codeText = operation instanceof MulMO ? "MUL" : operation instanceof DivMO ? "DIV" : "MOD";
 		
-		analyzer.report_info("MUL: " + codeText, term);
+		analyzer.report_info(term, "MUL: " + codeText);
 		
 		Code.put(code);
 	}
@@ -255,7 +332,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		else if (operation instanceof LessRO) code = Code.lt;
 		else code = Code.le;
 		
-		analyzer.report_info("REL: " + operation.getClass().getSimpleName(), condFact);
+		analyzer.report_info(condFact, "REL: " + operation.getClass().getSimpleName());
 		
 		Code.putFalseJump(code, 0);
 	}
@@ -265,23 +342,23 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	
 	public void visit(ConditionOr condition) {
-		analyzer.report_info("OR", condition);
+		analyzer.report_info(condition, "OR");
 	}
 	
 	public void visit(IfStmt statement) {
-		analyzer.report_info("IF", statement);
+		analyzer.report_info(statement, "IF");
 		
 		Code.fixup(fixUps.pop());
 	}
 	
 	public void visit(ElseStmt statement) {
-		analyzer.report_info("ELSE", statement);
+		analyzer.report_info(statement, "ELSE");
 		
 		Code.fixup(fixUps.pop());
 	}
 	
 	public void visit(IfBase ifBase) {
-		analyzer.report_info("IF BASE", ifBase);
+		analyzer.report_info(ifBase, "IF BASE");
 		
 		Code.loadConst(0);
 		Code.putFalseJump(Code.gt, 0);
@@ -289,7 +366,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(ElseBase elseBase) {
-		analyzer.report_info("ELSE BASE", elseBase);
+		analyzer.report_info(elseBase, "ELSE BASE");
 		
 		Code.putJump(0);
 		Code.fixup(fixUps.pop());
@@ -299,4 +376,74 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	// CUSTOM FUNCTIONS
 	// ======================================== //
+	
+	public static String codeToString(int code) {
+		switch (code) {
+			case 1: return "LOAD";
+			case 2: return "LOAD_N";
+			case 3: return "LOAD_1";
+			case 4: return "LOAD_2";
+			case 5: return "LOAD_3";
+			case 6: return "STORE";
+			case 7: return "STORE_N";
+			case 8: return "STORE_1";
+			case 9: return "STORE_2";
+			case 10: return "STORE_3";
+			case 11: return "GETSTATIC";
+			case 12: return "PUTSTATIC";
+			case 13: return "GETFIELD";
+			case 14: return "PUTFIELD";
+			case 15: return "CONST_N";
+			case 16: return "CONST_1";
+			case 17: return "CONST_2";
+			case 18: return "CONST_3";
+			case 19: return "CONST_4";
+			case 20: return "CONST_5";
+			case 21: return "CONST_M1";
+			case 22: return "CONST_";
+			case 23: return "ADD";
+			case 24: return "SUB";
+			case 25: return "MUL";
+			case 26: return "DIV";
+			case 27: return "REM";
+			case 28: return "NEG";
+			case 29: return "SHL";
+			case 30: return "SHR";
+			case 31: return "INC";
+			case 32: return "NEW_";
+			case 33: return "NEWARRAY";
+			case 34: return "ALOAD";
+			case 35: return "ASTORE";
+			case 36: return "BALOAD";
+			case 37: return "BASTORE";
+			case 38: return "ARRAYLENGTH";
+			case 39: return "POP";
+			case 40: return "DUP";
+			case 41: return "DUP2";
+			case 42: return "JMP";
+			case 43: return "JCC";
+			case 44: return "JCC_1";
+			case 45: return "JCC_2";
+			case 46: return "JCC_3";
+			case 47: return "JCC_4";
+			case 48: return "JCC_5";
+			case 49: return "CALL";
+			case 50: return "RETURN_";
+			case 51: return "ENTER";
+			case 52: return "EXIT";
+			case 53: return "READ";
+			case 54: return "PRINT";
+			case 55: return "BREAD";
+			case 56: return "BPRINT";
+			case 57: return "TRAP";
+			case 58: return "INVOKEVIRTUAL";
+			case 59: return "DUP_X1";
+			case 60: return "DUP_X2";
+			default: return "UNKNOWN";
+		}
+	}
+
+
+	
 }
+

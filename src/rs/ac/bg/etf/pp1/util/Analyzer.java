@@ -16,6 +16,15 @@ public class Analyzer {
 		logger = Logger.getLogger(clazz);
 	}
 	
+	private static Analyzer instance = null;
+	
+	public static Analyzer getInstance(Class clazz) {
+		if (instance == null) {
+			instance = new Analyzer(clazz);
+		}
+		return instance;
+	}
+	
 	private String formatMessage(String message, SyntaxNode info) {
 		// Extract parent information all the way to the root
 		String parentInfo = "";
@@ -31,50 +40,35 @@ public class Analyzer {
 				continue;
 			}
 
-			parentInfo = parent.getClass().getSimpleName() + " -> " + parentInfo;
+			parentInfo = parent.getClass().getSimpleName() + " > " + parentInfo;
+		}
+		
+		if (info == null) {
+			return "Built-In: " + message;
 		}
 		
 		return "Line " + info.getLine() + " [" + parentInfo +  info.getClass().getSimpleName() + "]: " + message;
 	}
 	
-	private String parenthood(SyntaxNode node) {
-		node = node.getParent();
-		
-		StringBuilder parenthood = new StringBuilder();
-		while (node != null) {
-			parenthood.append(node.getClass().getSimpleName());
-			
-			node = node.getParent();
-			
-			if (node != null) {
-				parenthood.append(" -> ");
-			}
-		}
-		
-		return parenthood.toString();
-	}
-	
-	public void report_error(String message, SyntaxNode info) {
+	public void report_error(SyntaxNode info, String message) {
 		errorDetected = true;
 		
 		logger.error(formatMessage(message, info));
-		// logger.error(parenthood(info));
 	}
 	
-	public void report_info(String message, SyntaxNode info) {
+	public void report_info(SyntaxNode info, String message) {
 		logger.info(formatMessage(message, info));
-		// logger.info(parenthood(info));
 	}
 	
 	public boolean isErrorDetected() {
 		return errorDetected;
 	}
 	
-	public boolean errorNotExists(SyntaxNode node, String name) {
+	public boolean ifErrorNotExists(SyntaxNode node, String name) {
 		Obj obj = Tab.find(name);
 		
 		if (obj == Tab.noObj) {
-			report_error("Symbol '" + name + "' is not declared", node);
+			report_error(node, "Symbol '" + name + "' is not declared");
 			return true;
 		}
 		
@@ -85,7 +79,7 @@ public class Analyzer {
 		Obj obj = Tab.find(name);
 		
 		if (obj != Tab.noObj) {
-			report_error("Symbol '" + name + "' is already declared as " + objKindToString(obj), node);
+			report_error(node, "Symbol '" + name + "' is already declared as " + objKindToString(obj));
 			return true;
 		}
 		
@@ -96,50 +90,64 @@ public class Analyzer {
 		Obj obj = Tab.find(name);
 		
 		if (obj.getKind() != kind) {
-			report_error("Symbol '" + name + "' is not a " + objKindToString(obj), node);
+			report_error(node, "Symbol '" + name + "' is not a " + objKindToString(obj));
 			return true;
 		}
 		
 		return false;
 	}
 	
-	public boolean errorStructWrongKind(SyntaxNode node, Struct struct, Struct kind) {
+	public boolean isErrorStructWrongKind(SyntaxNode node, Struct struct, Struct kind) {
 		if (struct != kind) {
-			report_error("Symbol '" + structKindToString(struct) + "' is not a " + structKindToString(kind), node);
+			report_error(node, "Symbol '" + structKindToString(struct) + "' is not a " + structKindToString(kind));
 			return true;
 		}
 		
 		return false;
 	}
 	
-	public boolean errorNotAssignable(SyntaxNode node, Struct nodeStruct, Struct typeStruct) {
+	public boolean isErrorNotAssignable(SyntaxNode node, Struct nodeStruct, Struct typeStruct) {
 		if (!nodeStruct.assignableTo(typeStruct)) {
 			String message = "Cannot assign " + nodeStruct.getKind() + " to " + typeStruct.getKind();
-			report_error(message, node);
+			report_error(node, message);
 			return true;
 		}
 		
 		return false;
 	}
 	
-	public boolean errorParameterNumberNotMatch(SyntaxNode node, List<Struct> one, List<Struct> two) {
+	public boolean isErrorParameterNumberNotMatch(SyntaxNode node, List<Struct> one, List<Struct> two) {
 		if (one == null || two == null) {
-			report_error("One of the parameter lists is null", node);
+			report_error(node, "One of the parameter lists is null");
 			return true;
 		}
 		
 		if (one.size() != two.size()) {
-			report_error("Number of parameters does not match " + one.size() + " != " + two.size(), node);
+			report_error(node, "Number of parameters does not match " + one.size() + " != " + two.size());
 			return true;
 		}
 		
 		return false;
 	}
 	
-	public boolean errorParameterTypesNotMatch(SyntaxNode node, List<Struct> one, List<Struct> two) {
+	public boolean isErrorParameterTypesNotMatch(SyntaxNode node, List<Struct> one, List<Struct> two) {
 		for (int i = 0; i < one.size(); i++) {
+			// Check if they are arrays
+			if (one.get(i).getKind() == Struct.Array && two.get(i).getKind() == Struct.Array) {
+				// If they are arrays and required element is of noType then it is ok, universal
+				if (one.get(i).getElemType() == Tab.noType) {
+					continue;
+				}
+				
+				if (!one.get(i).getElemType().equals(two.get(i).getElemType())) {
+					report_error(node, "Both parameters are arrays but item type do not match " + structKindToString(one.get(i).getElemType()) + " != " + structKindToString(two.get(i).getElemType()));
+					return true;
+				}
+				continue;
+			}
+			
 			if (!one.get(i).equals(two.get(i))) {
-				report_error("Parameter types do not match " + structKindToString(one.get(i)) + " != " + structKindToString(two.get(i)), node);
+				report_error(node, "Parameter types do not match " + structKindToString(one.get(i)) + " != " + structKindToString(two.get(i)));
 				return true;
 			}
 		}
@@ -148,7 +156,7 @@ public class Analyzer {
 	}
 	
 	public boolean errorParameterNotMatch(SyntaxNode node, List<Struct> one, List<Struct> two) {
-		return errorParameterNumberNotMatch(node, one, two) || errorParameterTypesNotMatch(node, one, two);
+		return isErrorParameterNumberNotMatch(node, one, two) || isErrorParameterTypesNotMatch(node, one, two);
 	}
 	
 	public Obj infoInsert(SyntaxNode node, int kind, String name, Struct type) {
@@ -157,7 +165,7 @@ public class Analyzer {
 		Obj obj = Tab.insert(kind, name, type);
 		obj.setLevel(0);
 		
-		report_info("Inserted " + objKindToString(obj) + " '" + name + "'", node);
+		report_info(node, "Inserted kind '" + objKindToString(obj) + "' with name '" + name + "' and type '" + structKindToString(type) + "'");
 		
 		return obj;
 	}
@@ -200,7 +208,7 @@ public class Analyzer {
 			case Struct.Interface:
 				return "Interface";
 			case Struct.Enum:
-				return "Enum";
+				return "Set";
 			default:
 				return "UNKNOWN";
 		}

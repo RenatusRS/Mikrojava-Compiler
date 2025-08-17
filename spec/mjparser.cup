@@ -61,6 +61,7 @@ terminal SEMI, COLON, COMMA, DOT;
 terminal LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE;
 terminal LAMBDA;
 terminal UNION;
+terminal READ, PRINT;
 
 terminal Integer NUMBER;
 terminal String IDENT;
@@ -71,6 +72,7 @@ terminal Set SET;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName, Designator, DesignatorName;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, ReturnTypes, Factor, MethodVarDecl;
 nonterminal rs.etf.pp1.symboltable.concepts.Struct ConstValue, Term, Expr, CondFact;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct PrintStatementOptional;
 
 nonterminal ProgDeclList, ProgDecl;
 nonterminal ConstDeclList, ConstDecl;
@@ -176,6 +178,8 @@ Statement ::= (DesignatorStmt) DesignatorStatement SEMI
 	| (IfStmt) IfBase LPAREN Condition RPAREN Statement
 	| (ElseStmt) IfBase LPAREN Condition RPAREN Statement ElseBase Statement
 	| (ReturnStmt) RETURN ReturnItem SEMI
+	| (PrintStmt) PRINT LPAREN PrintStatementOptional RPAREN SEMI
+	| (ReadStmt) READ LPAREN Designator RPAREN SEMI
 	| (WhileStmt) WhileTrigger LPAREN Condition RPAREN Statement
 	| (BreakStmt) BREAK SEMI
     | (ContinueStmt) CONTINUE SEMI
@@ -184,7 +188,9 @@ Statement ::= (DesignatorStmt) DesignatorStatement SEMI
 //   a = 5;
 //   if (a == 5) a = 6;
 //   return a;
+//   print(a);
 //   while (a == 5) a = 6;
+//   read(a);
 //   break;
 //   continue;
 //   // { a = 5; b = 6; c = 7; }
@@ -224,6 +230,9 @@ ReturnItem ::= (ReturnItemExpr) Expr
 	| (ReturnItemVoid) ;
 // EXAMPLE: 5 # {{empty}}
 
+PrintStatementOptional ::= (PrintStatementOptionalYes) Expr COMMA NUMBER:width
+	| (PrintStatementOptionalNo) Expr;
+
 // CONDITIONS
 Condition ::= (ConditionTerm) CondTerm
 	| (ConditionOr) CondTerm OR Condition;
@@ -253,7 +262,7 @@ Factor ::= (FactorVar) Designator
 	| (FactorConst) ConstValue
 	| (FactorExpression) LPAREN Expr RPAREN
 	| (FactorFuncCall) Designator LPAREN ActPars RPAREN
-	| (FactorArray) NEW Type LBRACKET Expr RBRACKET;
+	| (FactorNewArray) NEW Type LBRACKET Expr RBRACKET;
 // EXAMPLE: 5 # 'a' # true # (5 + 6) # a(5, 6, 7) # new int[5] TODO check this order
 
 // ACTUAL PARAMETERS
@@ -297,4 +306,4 @@ MulOp ::= (MulMO) MUL
 // EXAMPLE: * # / # %
 
 SetOp ::= (SetSO) UNION;
-// EXAMPLE: union
+// EXAMPLE: a union b
