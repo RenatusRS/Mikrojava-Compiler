@@ -2,14 +2,11 @@ package rs.ac.bg.etf.pp1;
 
 import rs.ac.bg.etf.pp1.ast.*;
 import rs.ac.bg.etf.pp1.util.Analyzer;
-import rs.etf.pp1.mj.runtime.Code;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Stack;
-
-import static rs.etf.pp1.mj.runtime.Code.eq;
 
 
 public class CodeGenerator extends VisitorAdaptor {
@@ -26,6 +23,16 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	public void visit(ProgName progName) {
 		Tab.find("chr").setAdr(Code.pc);
+		
+		Code.put(Code.enter);
+		
+		Code.put(1);
+		Code.put(1);
+		
+		Code.put(Code.load_n);
+		Code.put(Code.exit);
+		Code.put(Code.return_);
+		
 		Tab.find("ord").setAdr(Code.pc);
 		
 		Code.put(Code.enter);
@@ -49,15 +56,89 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(Code.exit);
 		Code.put(Code.return_);
 		
-		Obj ta  = Tab.find("add");
-		ta.setAdr(Code.pc);
+		Tab.find("add").setAdr(Code.pc);
 		
 		Code.put(Code.enter);
 		
-		Code.put(Code.load_n);
+		Code.put(2); // 2 formal parameters
+		Code.put(2); // 0 local variables
+		
+		// First element of the set it its current size
+		// Total size can be gotten by using the arraylength instruction minus 1 (because the first element is the size)
+		
+		// Loop over the set to see if the element already exists
+		// If it does, we do not add it
+		// We go from 1 to current size + 1, // because the first element is the size of the set
+		// for (int i = 1; i <= set[0]; i++) {
+		//    if (set[i] == element) {
+		//        return; // Element already exists, do not add
+		//    }
+		//    if (set[i] is 0) { // Empty slot, we can add the element here
+		// 	      set[i] = element;
+		//        set[0]++; // Increment the size of the set
+		//        return;
+		//    }
+		// }
+		// If we reach here, the set is full, we cannot add the element
+		// return;
+		
+		// for
+		Code.loadConst(0); // i = 0
+		
+		
+		int forJumpStart = Code.pc; // Save jump address for the start of the loop
+		Code.put(Code.const_1);
+		Code.put(Code.add); // i++
+		
+		Code.put(Code.dup); // One for i, one for the condition
+		
+		Code.put(Code.load_n); // Load set address;
+		Code.loadConst(0); //0
+		Code.put(Code.aload); // Load set[0] (size of the set)
+		Code.putFalseJump(Code.le, 0); // Jump if i <= set[0]
+		int forJump = Code.pc - 2; // Save jump address for the end of the loop
+		 // {
+		Code.put(Code.dup); // Duplicate i for indexing
+		Code.put(Code.load_n); // Load set address
+		Code.put(Code.dup_x1); // Duplicate i for indexing
+		Code.put(Code.pop); // Pop the original i
+		Code.put(Code.aload); // Load set[i]
+		Code.put(Code.load_1); // Load element to add
+		Code.putFalseJump(Code.eq, 0); // Jump if set[i] == element
+		int ifJump = Code.pc - 2;
+		Code.put(Code.exit);
+		Code.put(Code.return_); // return; // Element already exists
+		Code.fixup(ifJump); // }
+		Code.putJump(forJumpStart);
+		Code.fixup(forJump);
+		
+		// Get array length
+		Code.put(Code.dup);
+		Code.put(Code.load_n); // Load set address
+		Code.put(Code.arraylength); // Load set length
+		
+		Code.putFalseJump(Code.lt, 0); // Jump if set length < 1
+		int ifSizeCheck = Code.pc - 2;
+		
+		Code.put(Code.dup); // Duplicate the length for indexing
+		Code.put(Code.load_n); // Load set address
+		Code.put(Code.dup_x1);
+		Code.put(Code.pop);
+		Code.put(Code.load_1); // Load element to add
+		Code.put(Code.astore);
+		
+		Code.put(Code.load_n); // Load set address
+		Code.put(Code.dup_x1);
+		Code.put(Code.pop);
+		Code.loadConst(0);
+		Code.put(Code.dup_x1);
+		Code.put(Code.pop);
+		Code.put(Code.astore); // TODO Fix set overflow if I have time
+		
+		Code.fixup(ifSizeCheck);
 		
 		Code.put(Code.exit);
-		Code.put(Code.return_);
+		Code.put(Code.return_); // return; // Element added
 	}
 	
 	Stack<Integer> fixUps = new Stack<>();
@@ -68,18 +149,48 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	public void visit(PrintStatementOptionalNo printStatementOptional) {
 		if (printStatementOptional.getExpr().struct == Tab.charType) {
-			analyzer.report_info(printStatementOptional, "CODE LOAD CONST: 1");
+			analyzer.report_info(printStatementOptional, "CODE LOAD PRINT NO WIDTH CONST: 1");
 			Code.loadConst(1);
-			analyzer.report_info(printStatementOptional, "CODE PUT: BPRINT");
+			analyzer.report_info(printStatementOptional, "CODE PUT PRINT NO WIDTH: BPRINT");
 			Code.put(Code.bprint);
 		} else if (printStatementOptional.getExpr().struct == Tab.intType) {
-			analyzer.report_info(printStatementOptional, "CODE LOAD CONST: 5");
+			analyzer.report_info(printStatementOptional, "CODE LOAD PRINT NO WIDTH CONST: 1");
 			Code.loadConst(1);
-			analyzer.report_info(printStatementOptional, "CODE PUT: PRINT");
+			analyzer.report_info(printStatementOptional, "CODE PUT PRINT NO WIDTH: PRINT");
 			Code.put(Code.print);
 		} else if (printStatementOptional.getExpr().struct == Tab.setType) {
-			analyzer.report_info(printStatementOptional, "CODE LOAD CONST: 1");
-			// TODO for set type
+			analyzer.report_info(printStatementOptional, "CODE LOAD PRINT NO WIDTH CONST: 1");
+			
+			Code.put(Code.dup);
+			Code.loadConst(0); // Load set address
+			Code.put(Code.aload); // Load set[0] (size of the set)
+			
+			Code.loadConst(1);
+			Code.put(Code.add); // set[0] + 1
+			int forJumpStart = Code.pc; // Save jump address for the start of the loop
+			Code.loadConst(1);
+			Code.put(Code.sub); // set[0] - 1
+			Code.put(Code.dup); // Duplicate the size for condition check
+			
+			Code.loadConst(0);
+			Code.putFalseJump(Code.ne, 0);
+			int jumpToEnd = Code.pc - 2;
+			
+			Code.put(Code.dup2);
+			Code.put(Code.aload);
+			
+			Code.loadConst(0);
+			Code.put(Code.print);
+			
+			Code.loadConst(' ');
+			Code.loadConst(1);
+			Code.put(Code.bprint);
+			
+			Code.putJump(forJumpStart);
+			Code.fixup(jumpToEnd);
+			
+			Code.put(Code.pop); // Pop the size of the set
+			Code.put(Code.pop); // Pop the set address
 		} else {
 			analyzer.report_error(printStatementOptional, "Unsupported type for print statement");
 		}
@@ -244,8 +355,9 @@ public class CodeGenerator extends VisitorAdaptor {
 			analyzer.report_error(designatorStatement, "Function '" + func.getName() + "' has no return type");
 		}
 		
+		int offset = func.getAdr() - Code.pc;
 		Code.put(Code.call);
-		Code.put2(func.getAdr());
+		Code.put2(offset);
 		
 		if (func.getType() != Tab.noType) {
 			Code.put(Code.pop);
@@ -257,6 +369,17 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	
 	public void visit(FactorFuncCall designatorStatement) {
+		analyzer.report_info(designatorStatement, "FACTOR FUNC CALL: " + designatorStatement.getDesignator().obj.getName() + " AT ADDR: " + designatorStatement.getDesignator().obj.getAdr());
+		
+		Obj func = designatorStatement.getDesignator().obj;
+		
+		if (func.getType() == Tab.noType) {
+			analyzer.report_error(designatorStatement, "Function '" + func.getName() + "' has no return type");
+		}
+		
+		int offset = func.getAdr() - Code.pc;
+		Code.put(Code.call);
+		Code.put2(offset);
 	}
 	
 	public void visit(ReturnStmt statement) {
@@ -325,7 +448,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		
 		int code;
 		
-		if (operation instanceof EqualRO) code = eq;
+		if (operation instanceof EqualRO) code = Code.eq;
 		else if (operation instanceof NotEqualRO) code = Code.ne;
 		else if (operation instanceof GreaterRO) code = Code.gt;
 		else if (operation instanceof GreaterEqualRO) code = Code.ge;
