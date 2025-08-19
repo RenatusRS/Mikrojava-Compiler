@@ -25,11 +25,9 @@ set s1, s2, s3;
 		s1 = new set[3]; // s2 = new set[5]; s3 = new set[10];
 		//print(s1);
 		add(s1, 7);
-		//print(s1);
-		//print(eol);
-		//add(s1, 8);
+		add(s1, 8);
 		print(s1);
-		//print(eol);
+		print(eol);
 		//add(s1, 9);
 		//print(s1);
 		//

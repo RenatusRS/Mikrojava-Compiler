@@ -9,6 +9,7 @@ public class Tab extends rs.etf.pp1.symboltable.Tab {
 	public static final Struct boolType = new Struct(Struct.Bool);
 	public static final Struct setType = new Struct(Struct.Enum);
 	private static final Analyzer analyzer = Analyzer.getInstance(MJParser.class);
+	private static int tempAdr = 100;
 	
 	public static void init() {
 		if (currentScope != null) return;
@@ -26,5 +27,13 @@ public class Tab extends rs.etf.pp1.symboltable.Tab {
 	public static void openScope(SyntaxNode node) {
 		rs.etf.pp1.symboltable.Tab.openScope();
 		analyzer.report_info(node, "Scope opened");
+	}
+	
+	public static Obj insertTemp(int kind, String name, Struct type) {
+		Obj temp = Tab.insert(kind, "$" + name, type);
+		temp.setLevel(1);
+		temp.setAdr(tempAdr++);
+		analyzer.report_info(null, "Temporary variable inserted: " + temp.getName() + " at address " + temp.getAdr());
+		return temp;
 	}
 }

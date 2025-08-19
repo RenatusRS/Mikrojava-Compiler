@@ -30,8 +30,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(1);
 		
 		Code.put(Code.load_n);
-		Code.put(Code.exit);
-		Code.put(Code.return_);
+		Code.exitReturn();
 		
 		Tab.find("ord").setAdr(Code.pc);
 		
@@ -41,8 +40,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(1);
 		
 		Code.put(Code.load_n);
-		Code.put(Code.exit);
-		Code.put(Code.return_);
+		Code.exitReturn();
 		
 		Tab.find("len").setAdr(Code.pc);
 		
@@ -53,8 +51,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		
 		Code.put(Code.load_n);
 		Code.put(Code.arraylength);
-		Code.put(Code.exit);
-		Code.put(Code.return_);
+		Code.exitReturn();
 		
 		Tab.find("add").setAdr(Code.pc);
 		
@@ -63,82 +60,12 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(2); // 2 formal parameters
 		Code.put(2); // 0 local variables
 		
-		// First element of the set it its current size
-		// Total size can be gotten by using the arraylength instruction minus 1 (because the first element is the size)
+		Code.put(Code.load_n);
+		Code.put(Code.load_1);
 		
-		// Loop over the set to see if the element already exists
-		// If it does, we do not add it
-		// We go from 1 to current size + 1, // because the first element is the size of the set
-		// for (int i = 1; i <= set[0]; i++) {
-		//    if (set[i] == element) {
-		//        return; // Element already exists, do not add
-		//    }
-		//    if (set[i] is 0) { // Empty slot, we can add the element here
-		// 	      set[i] = element;
-		//        set[0]++; // Increment the size of the set
-		//        return;
-		//    }
-		// }
-		// If we reach here, the set is full, we cannot add the element
-		// return;
+		Code.setAddElem();
 		
-		// for
-		Code.loadConst(0); // i = 0
-		
-		
-		int forJumpStart = Code.pc; // Save jump address for the start of the loop
-		Code.put(Code.const_1);
-		Code.put(Code.add); // i++
-		
-		Code.put(Code.dup); // One for i, one for the condition
-		
-		Code.put(Code.load_n); // Load set address;
-		Code.loadConst(0); //0
-		Code.put(Code.aload); // Load set[0] (size of the set)
-		Code.putFalseJump(Code.le, 0); // Jump if i <= set[0]
-		int forJump = Code.pc - 2; // Save jump address for the end of the loop
-		 // {
-		Code.put(Code.dup); // Duplicate i for indexing
-		Code.put(Code.load_n); // Load set address
-		Code.put(Code.dup_x1); // Duplicate i for indexing
-		Code.put(Code.pop); // Pop the original i
-		Code.put(Code.aload); // Load set[i]
-		Code.put(Code.load_1); // Load element to add
-		Code.putFalseJump(Code.eq, 0); // Jump if set[i] == element
-		int ifJump = Code.pc - 2;
-		Code.put(Code.exit);
-		Code.put(Code.return_); // return; // Element already exists
-		Code.fixup(ifJump); // }
-		Code.putJump(forJumpStart);
-		Code.fixup(forJump);
-		
-		// Get array length
-		Code.put(Code.dup);
-		Code.put(Code.load_n); // Load set address
-		Code.put(Code.arraylength); // Load set length
-		
-		Code.putFalseJump(Code.lt, 0); // Jump if set length < 1
-		int ifSizeCheck = Code.pc - 2;
-		
-		Code.put(Code.dup); // Duplicate the length for indexing
-		Code.put(Code.load_n); // Load set address
-		Code.put(Code.dup_x1);
-		Code.put(Code.pop);
-		Code.put(Code.load_1); // Load element to add
-		Code.put(Code.astore);
-		
-		Code.put(Code.load_n); // Load set address
-		Code.put(Code.dup_x1);
-		Code.put(Code.pop);
-		Code.loadConst(0);
-		Code.put(Code.dup_x1);
-		Code.put(Code.pop);
-		Code.put(Code.astore); // TODO Fix set overflow if I have time
-		
-		Code.fixup(ifSizeCheck);
-		
-		Code.put(Code.exit);
-		Code.put(Code.return_); // return; // Element added
+		Code.exitReturn();
 	}
 	
 	Stack<Integer> fixUps = new Stack<>();
@@ -161,6 +88,11 @@ public class CodeGenerator extends VisitorAdaptor {
 		} else if (printStatementOptional.getExpr().struct == Tab.setType) {
 			analyzer.report_info(printStatementOptional, "CODE LOAD PRINT NO WIDTH CONST: 1");
 			
+			Obj ind = Tab.insertTemp(Obj.Var, "setPrintInd", Tab.intType);
+			Code.loadConst(0); // Initialize index to 0
+			Code.store(ind); // Store index in temporary variable
+			
+			// Expected stack: ..., setAddr
 			Code.put(Code.dup);
 			Code.loadConst(0); // Load set address
 			Code.put(Code.aload); // Load set[0] (size of the set)
