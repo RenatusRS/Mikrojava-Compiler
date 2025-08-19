@@ -73,8 +73,12 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		}
 	}
 	
-	// Expected stack: ..., elem2, elem1
-	// Returned stack: ..., elem2, elem1, elem1 or elem2, elem1, elem2
+	/**
+	 * Expected stack: ..., elem2, elem1
+	 * <br>
+	 * Returned stack: ..., elem2, elem1, elem1 or elem2, elem1, elem2
+	 */
+	
 	public static void dupli(int pos) {
 		if (pos < 0 || pos > 1) {
 			throw new IllegalArgumentException("Position must be between 0 and 1, inclusive: " + pos);
@@ -88,7 +92,6 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		}
 	}
 	
-	// Expected stack: ...
 	public static void exitReturn() {
 		Code.put(Code.exit);
 		Code.put(Code.return_);
@@ -157,8 +160,12 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		jm.addLabel("end");
 	}
 	
-	// Expected stack: ..., num
-	// Returned stack: ..., num + change
+	/**
+	 * Expected stack: ..., num
+	 * <br>
+	 * Returned stack: ..., num + change
+	 */
+	
 	public static void addNum(int change) {
 		if (change == 0) {
 			return;
@@ -173,8 +180,12 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		}
 	}
 	
-	// Expected stack: ..., cmp1, cmp2
-	// Returned stack: ...
+	/**
+	 * Expected stack: ..., cmp1, cmp2
+	 * <br>
+	 * Returned stack: ...
+	 */
+	
 	public static void If(int comparison, Runnable action) {
 		Code.putFalseJump(comparison, 0);
 		int jumpAddress = Code.pc - 2; // Save the jump address
@@ -182,8 +193,11 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		Code.fixup(jumpAddress);
 	}
 	
-	// Expected stack: ..., timesToLoop
-	// Pushes current loop index to the stack for the runnable action.
+	/**
+	 * Expected stack: ..., timesToLoop
+	 * <br>
+	 * Pushes current loop index to the stack for the runnable action.
+	 */
 	public static void For(Runnable action) {
 		JumpManager jm = new JumpManager();
 		Obj max = Tab.insertTemp(Obj.Var, "forMax", Tab.intType);
@@ -215,6 +229,40 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		Code.put(Code.enter);
 		Code.put(formParam);
 		Code.put(formParam + localParam);
+	}
+	
+	/**
+	 * Expected stack: ..., elem1, elem2
+	 * <br>
+	 * Returned stack: ..., elemMin
+	 */
+	public static void min() {
+		JumpManager jm = new JumpManager();
+		jm.jump("secondSmaller", Code.gt);
+		Code.put(Code.pop); // elem1
+		jm.jump("exit");
+		jm.addLabel("secondSmaller");
+		Code.put(Code.dup_x1); // elem2, elem1, elem2
+		Code.put(Code.pop); // elem2, elem1
+		Code.put(Code.pop); // elem2
+		jm.addLabel("exit");
+	}
+	
+	/**
+	 * Expected stack: ..., elem1, elem2
+	 * <br>
+	 * Returned stack: ..., elemMax
+	 */
+	public static void max() {
+		JumpManager jm = new JumpManager();
+		jm.jump("secondBigger", Code.lt);
+		Code.put(Code.pop); // elem1
+		jm.jump("exit");
+		jm.addLabel("secondBigger");
+		Code.put(Code.dup_x1); // elem2, elem1, elem2
+		Code.put(Code.pop); // elem2, elem1
+		Code.put(Code.pop); // elem2
+		jm.addLabel("exit");
 	}
 }
 
