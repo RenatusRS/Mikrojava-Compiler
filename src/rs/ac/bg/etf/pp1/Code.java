@@ -61,7 +61,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		} else if (pos2 == 0 && pos1 == 2 && pos0 == 1) { // 2 1 0  ->  0 2 1
 			Code.put(Code.dup_x2);  // 2 1 0 -> 0 2 1 0
 			Code.put(Code.pop);     // 0 2 1 0 -> 0 2 1
-
+			
 		} else if (pos2 == 0 && pos1 == 1 && pos0 == 2) { // 2 1 0  ->  0 1 2
 			Code.put(Code.dup_x2);  // 2 1 0   -> 0 2 1 0
 			Code.put(Code.pop);     // 0 2 1 0 -> 0 2 1
@@ -94,27 +94,36 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		Code.put(Code.return_);
 	}
 	
-	// Expected stack: ..., setAdr
-	// Retureed stack: ..., setSize
+	/**
+	 * Expected stack: ..., setAdr
+	 * <br>
+	 * Returned stack: ..., setSize
+	 */
 	public static void setGetSize() {
 		Code.loadConst(0);
 		Code.put(Code.aload);
 	}
 	
-	// Expected stack: ..., setAdr, index
-	// Returned stack: ..., elem
+	/**
+	 * Expected stack: ..., setAdr, index
+	 * <br>
+	 * Returned stack: ..., elem
+	 */
 	public static void setGetElem() {
-		Code.changeNum(1);
+		Code.addNum(1);
 		Code.put(Code.aload);
 	}
 	
-	// Expected stack: ..., setAdr, elem
-	// Returned stack: ...
+	/**
+	 * Expected stack: ..., setAdr, elem
+	 * <br>
+	 * Returned stack: ...
+	 */
 	public static void setAddElem() {
 		JumpManager jm = new JumpManager();
 		
-		Code.dupli(1); // setAdr, elem, setAdr
-		Code.setGetSize(); // setAdr, elem, setSize
+		Code.dupli(1); // setAdr, elem, setAdr 4 5 4
+		Code.setGetSize(); // setAdr, elem, setSize 4 5 0
 		
 		Code.For(() -> { // setAdr, elem, index
 			Code.swap(1, 0, 2); // elem, index, setAdr
@@ -127,7 +136,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 			Code.If(Code.eq, () -> { // if elem == currElem
 				Code.put(Code.pop);
 				Code.put(Code.pop);
-				jm.addJump("end");
+				jm.jump("end");
 			});
 		});
 		
@@ -135,7 +144,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		Code.loadConst(0); // setAdr, elem, setAdr, 0
 		Code.dupli(1); // setAdr, elem, setAdr, 0, setAdr
 		Code.setGetSize(); // setAdr, elem, setAdr, 0, setSize
-		Code.changeNum(1); // setAdr, elem, setAdr, 0, setSize + 1
+		Code.addNum(1); // setAdr, elem, setAdr, 0, setSize + 1
 		Code.put(Code.astore); // setAdr, elem
 		
 		Code.dupli(1); // setAdr, elem, setAdr
@@ -150,7 +159,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	
 	// Expected stack: ..., num
 	// Returned stack: ..., num + change
-	public static void changeNum(int change) {
+	public static void addNum(int change) {
 		if (change == 0) {
 			return;
 		}
@@ -188,17 +197,17 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		
 		Code.load(ind);
 		Code.load(max);
-		jm.addJump("forEnd", Code.ge);
+		jm.jump("forEnd", Code.ge);
 		
 		Code.load(ind);
 		
 		action.run();
 		
 		Code.load(ind);
-		Code.changeNum(1);
+		Code.addNum(1);
 		Code.store(ind);
 		
-		jm.addJump("forBegin"); // Jump back to the beginning if condition is met
+		jm.jump("forBegin");
 		jm.addLabel("forEnd");
 	}
 	

@@ -111,6 +111,7 @@ ProgDecl ::= (ProgConstDeclarations) CONST Type:constDecl ConstDeclList SEMI
 // CONST DECLARATION LIST
 
 ConstDeclList ::= ConstDeclList COMMA ConstDecl
+	| ConstDeclList error COMMA:com {: parser.report_error("Invalid global var declaration", com); :} ConstDecl
 	| ConstDecl;
 // EXAMPLE: a = 5, b = 6, c = 7 # a = 5
 
@@ -199,8 +200,7 @@ Statement ::= (DesignatorStmt) DesignatorStatement SEMI
 DesignatorStatement ::= (DesignatorStatementAssign) Designator AssignOp Expr
 	| (DesignatorStatementInc) Designator INC
 	| (DesignatorStatementDec) Designator DEC
-	| (DesignatorStatementFunc) Designator LPAREN ActPars RPAREN
-	| (DesignatorStatementSet) Designator AssignOp Designator SetOp Designator;
+	| (DesignatorStatementFunc) Designator LPAREN ActPars RPAREN;
 // EXAMPLE: a = 5; # a++; # a--; # a(b, c, d);
 
 Designator ::= (DesignatorVar) DesignatorName
@@ -251,6 +251,7 @@ CondFact ::= (CondFactRel) Expr RelOp Expr
 Expr ::= (ExprTerm) Term
 	| (ExprAdd) Expr AddOp Term
 	| (ExprMinus) MINUS Term
+	| (ExprSet) Expr SetOp Term
    	| (ExprMap) Designator DOT MAP LPAREN IDENT:iterator LAMBDA Expr RPAREN;
 // EXAMPLE: 5 # 5 + 6 # -5
 

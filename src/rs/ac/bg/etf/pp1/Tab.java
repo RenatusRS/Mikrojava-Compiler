@@ -30,9 +30,11 @@ public class Tab extends rs.etf.pp1.symboltable.Tab {
 	}
 	
 	public static Obj insertTemp(int kind, String name, Struct type) {
-		Obj temp = Tab.insert(kind, "$" + name, type);
+		int adr = tempAdr;
+		Obj temp = Tab.insert(kind, "$" + name + adr, type);
 		temp.setLevel(1);
-		temp.setAdr(tempAdr++);
+		temp.setAdr(tempAdr);
+		tempAdr++;
 		analyzer.report_info(null, "Temporary variable inserted: " + temp.getName() + " at address " + temp.getAdr());
 		return temp;
 	}

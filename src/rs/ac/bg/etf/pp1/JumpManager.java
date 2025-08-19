@@ -7,7 +7,7 @@ public class JumpManager {
 	private final HashMap<String, ArrayList<Integer>> jumps = new HashMap<>();
 	private final HashMap<String, Integer> labels = new HashMap<>();
 	
-	public void addJump(String label) {
+	public void jump(String label) {
 		ArrayList<Integer> jumpList = jumps.computeIfAbsent(label, k -> new ArrayList<>());
 		
 		int adr = 0;
@@ -23,7 +23,7 @@ public class JumpManager {
 		jumpList.add(Code.pc - 2);
 	}
 	
-	public void addJump(String label, int comparison) {
+	public void jump(String label, int comparison) {
 		ArrayList<Integer> jumpList = jumps.computeIfAbsent(label, k -> new ArrayList<>());
 		
 		int adr = 0;

@@ -27,11 +27,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				new AbstractMap.SimpleEntry<>("aa", Tab.setType),
 				new AbstractMap.SimpleEntry<>("bb", Tab.intType)
 		));
-		//
-		// addMethod("addAll", Tab.setType, Arrays.asList(
-		// 		new AbstractMap.SimpleEntry<>("aa", Tab.setType),
-		// 		new AbstractMap.SimpleEntry<>("bb", new Struct(Struct.Array, Tab.intType))
-		// ));
+		
+		addMethod("addAll", Tab.noType, Arrays.asList(
+		 		new AbstractMap.SimpleEntry<>("aa", Tab.setType),
+		 		new AbstractMap.SimpleEntry<>("bb", new Struct(Struct.Array, Tab.intType))
+		 ));
 		
 		Obj ordMethod = Tab.find("ord");
 		if (ordMethod == Tab.noObj) {
@@ -198,6 +198,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		analyzer.isErrorNotAssignable(expr, expr.getExpr().struct, Tab.intType);
 	}
 	
+	public void visit(ExprSet expr) {
+		expr.struct = Tab.setType;
+		
+		analyzer.isErrorNotAssignable(expr, expr.getTerm().struct, Tab.setType);
+		analyzer.isErrorNotAssignable(expr, expr.getExpr().struct, Tab.setType);
+	}
+	
 	public void visit(ExprMap expr) {
 		expr.struct = Tab.noType;
 		
@@ -356,44 +363,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		List<Struct> callParams = methodCalls.pop();
 		
 		analyzer.errorParameterNotMatch(designatorStatement, methodParams, callParams);
-	}
-	
-	public void visit(DesignatorStatementSet designatorStatement) {
-		Obj designatorObj = designatorStatement.getDesignator().obj;
-		
-		if (designatorObj.getKind() != Obj.Var) {
-			analyzer.report_error(designatorStatement, "Designator is not a variable");
-			return;
-		}
-		
-		if (designatorObj.getType() != Tab.setType) {
-			analyzer.report_error(designatorStatement, "Designator is not of type set");
-			return;
-		}
-		
-		designatorObj = designatorStatement.getDesignator1().obj;
-		
-		if (designatorObj.getKind() != Obj.Var) {
-			analyzer.report_error(designatorStatement, "Designator left is not a variable");
-			return;
-		}
-		
-		if (designatorObj.getType() != Tab.setType) {
-			analyzer.report_error(designatorStatement, "Designator left is not of type set");
-			return;
-		}
-		
-		designatorObj = designatorStatement.getDesignator2().obj;
-		
-		if (designatorObj.getKind() != Obj.Var) {
-			analyzer.report_error(designatorStatement, "Designator right is not a variable");
-			return;
-		}
-		
-		if (designatorObj.getType() != Tab.setType) {
-			analyzer.report_error(designatorStatement, "Designator right is not of type int");
-			return;
-		}
 	}
 	
 	// ========================================================================

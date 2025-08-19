@@ -73,7 +73,8 @@ public class CodeGenerator extends VisitorAdaptor {
 			Code.swap(1, 2); // arrAdr, setAdr, elem
 			Code.dupli(1); // arrAdr, setAdr, elem, setAdr
 			Code.swap(0, 1); // arrAdr, setAdr, setAdr, elem
-			Code.setAddElem();
+			Code.setAddElem(); // arrAdr, setAdr
+			Code.swap(0, 1); // setAdr, arrAdr
 		});
 		
 		Code.put(Code.pop);
@@ -291,15 +292,6 @@ public class CodeGenerator extends VisitorAdaptor {
 		}
 	}
 	
-	
-	public void visit(DesignatorStatementSet designatorStatement) {
-		analyzer.report_info(designatorStatement, "SET ASSIGN " + designatorStatement.getDesignator().obj.getName() + " BY UNION OF " + designatorStatement.getDesignator1().obj.getName() + " AND " + designatorStatement.getDesignator2().obj.getName());
-		
-		Obj designatorObj = designatorStatement.getDesignator().obj;
-		
-		Code.store(designatorObj);
-	}
-	
 	// ======================================== //
 	// FACTOR
 	// ======================================== //
@@ -339,7 +331,7 @@ public class CodeGenerator extends VisitorAdaptor {
 			Code.put(Code.const_1);
 			Code.put(Code.add);
 			Code.put(Code.newarray);
-			Code.put(0);
+			Code.put(1);
 		}
 	}
 	
@@ -361,6 +353,59 @@ public class CodeGenerator extends VisitorAdaptor {
 	public void visit(ExprMinus expr) {
 		analyzer.report_info(expr, "UNARY MINUS");
 		Code.put(Code.neg);
+	}
+	
+	public void visit(ExprSet expr) {
+		analyzer.report_info(expr, "SET UNION");
+		
+		// Expected stack: ..., set2, set1
+		
+		Code.swap(0, 1); // ..., set1, set2
+		Code.put(Code.dup2); // ..., set1, set2, set1, set2
+		
+		Code.setGetSize(); // ..., set1, set2, set1, sizeSet2
+		Code.swap(0, 1); // ..., set1, set2, sizeSet2, set1
+		Code.setGetSize(); // ..., set1, set2, sizeSet2, sizeSet1
+		
+		Code.put(Code.add); // ..., set1, set2, sizeSet1 + sizeSet2
+		Code.loadConst(1);
+		Code.put(Code.add); // ..., set1, set2, sizeSet1 + sizeSet2 + 1
+		Code.put(Code.newarray); Code.put(1); // ..., set1, set2, newSet
+		
+		Code.swap(0, 1); // ..., set1, newSet, set2
+		
+		Code.dupli(0); // ..., set1, newSet, set2, set2
+		Code.setGetSize(); // ..., set1, newSet, set2, sizeSet2
+		Code.For(() -> { // ..., set1, newSet, set2, index);
+			Code.dupli(1); // ..., set1, newSet, set2, index, set2
+			Code.swap(0, 1); // ..., set1, newSet, set2, set2, index
+			Code.setGetElem(); // ..., set1, newSet, set2, elem
+			Code.swap(1, 2); // ..., set1, set2, newSet, elem
+			Code.dupli(1); // ..., set1, set2, newSet, elem, newSet
+			Code.swap(0, 1); // ..., set1, set2, newSet, newSet, elem
+			
+			Code.setAddElem(); // ..., set1, set2, newSet
+			Code.swap(0, 1); // ..., set1, newSet, set2
+		});
+		
+		Code.put(Code.pop); // set1, newSet
+		
+		Code.dupli(1); // set1, newSet, set1
+		Code.setGetSize(); // set1, newSet, sizeSet1
+		Code.swap(1, 2); // newSet, set1, sizeSet1
+		Code.For(() -> { // newSet, set1, index
+			Code.dupli(1); // newSet, set1, index, set1
+			Code.swap(0, 1); // newSet, set1, set1, index
+			Code.setGetElem(); // newSet, set1, elem
+			Code.swap(1, 2); // set1, newSet, elem
+			Code.dupli(1); // set1, newSet, elem, newSet
+			Code.swap(0, 1); // set1, newSet, newSet, elem
+			
+			Code.setAddElem(); // set1, newSet
+			Code.swap(0, 1); // newSet, set1
+		});
+		
+		Code.put(Code.pop); // Pop the set1 address
 	}
 	
 	public void visit(TermMul term) {
