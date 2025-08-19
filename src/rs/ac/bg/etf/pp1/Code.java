@@ -2,9 +2,6 @@ package rs.ac.bg.etf.pp1;
 
 import rs.etf.pp1.symboltable.concepts.Obj;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
 public class Code extends rs.etf.pp1.mj.runtime.Code {
 	public static void swap(int pos1, int pos2) {
 		if (pos1 == pos2) {
@@ -40,6 +37,42 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		}
 	}
 	
+	public static void swap(int pos2, int pos1, int pos0) {
+		if (pos2 == 2 && pos1 == 1 && pos0 == 0) {
+			return;
+		}
+		
+		if (pos2 == 2 && pos1 == 0 && pos0 == 1) {        // 2 1 0  ->  2 0 1
+			Code.put(Code.dup_x1);
+			Code.put(Code.pop);
+			
+		} else if (pos2 == 1 && pos1 == 2 && pos0 == 0) { // 2 1 0  ->  1 2 0
+			Code.put(Code.dup_x1);  // 2 1 0   -> 2 0 1 0
+			Code.put(Code.pop);     // 2 0 1 0 -> 2 0 1
+			Code.put(Code.dup_x2);  // 2 0 1   -> 1 2 0 1
+			Code.put(Code.pop);     // 1 2 0 1 -> 1 2 0
+			
+		} else if (pos2 == 1 && pos1 == 0 && pos0 == 2) { // 2 1 0  ->  1 0 2
+			Code.put(Code.dup_x2);  // 2 1 0   -> 0 2 1 0
+			Code.put(Code.pop);     // 0 2 1 0 -> 0 2 1
+			Code.put(Code.dup_x2);  // 0 2 1   -> 1 0 2 1
+			Code.put(Code.pop);     // 1 0 2 1 -> 1 0 2
+			
+		} else if (pos2 == 0 && pos1 == 2 && pos0 == 1) { // 2 1 0  ->  0 2 1
+			Code.put(Code.dup_x2);  // 2 1 0 -> 0 2 1 0
+			Code.put(Code.pop);     // 0 2 1 0 -> 0 2 1
+
+		} else if (pos2 == 0 && pos1 == 1 && pos0 == 2) { // 2 1 0  ->  0 1 2
+			Code.put(Code.dup_x2);  // 2 1 0   -> 0 2 1 0
+			Code.put(Code.pop);     // 0 2 1 0 -> 0 2 1
+			Code.put(Code.dup_x1);  // 0 2 1   -> 0 1 2 1
+			Code.put(Code.pop);     // 0 1 2 1 -> 0 1 2
+			
+		} else {
+			throw new IllegalStateException("Unhandled 3-param permutation");
+		}
+	}
+	
 	// Expected stack: ..., elem2, elem1
 	// Returned stack: ..., elem2, elem1, elem1 or elem2, elem1, elem2
 	public static void dupli(int pos) {
@@ -61,73 +94,58 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		Code.put(Code.return_);
 	}
 	
-	// Expected stack: ..., setAddr
+	// Expected stack: ..., setAdr
 	// Retureed stack: ..., setSize
 	public static void setGetSize() {
 		Code.loadConst(0);
 		Code.put(Code.aload);
 	}
 	
-	// Expected stack: ..., setAddr, index
+	// Expected stack: ..., setAdr, index
 	// Returned stack: ..., elem
 	public static void setGetElem() {
 		Code.changeNum(1);
 		Code.put(Code.aload);
 	}
 	
-	// Expected stack: ..., setAddr, elem
+	// Expected stack: ..., setAdr, elem
 	// Returned stack: ...
 	public static void setAddElem() {
 		JumpManager jm = new JumpManager();
 		
-		Obj ind = Tab.insertTemp(Obj.Var, "setAddElemInd", Tab.intType);
-		Code.loadConst(0);
-		Code.store(ind);
+		Code.dupli(1); // setAdr, elem, setAdr
+		Code.setGetSize(); // setAdr, elem, setSize
 		
-		jm.addLabel("setAddElem_forBegin");
-		
-		Code.dupli(1); // setAddr, elem, setAddr
-		Code.setGetSize(); // setAddr, elem, setSize
-		
-		Code.load(ind); // setAddr, elem, setSize, ind
-		Code.swap(0, 1); // setAddr, elem, ind, setSize
-		
-		jm.addJump("setAddElemEnd_forEnd", Code.ge);
-		
-		Code.dupli(1); // setAddr, elem, setAddr
-		Code.load(ind); // setAddr, elem, setAddr, ind
-		Code.setGetElem(); // setAddr, elem, currElem
-		Code.dupli(1); // setAddr, elem, currElem, elem
-		
-		Code.If(Code.eq, () -> {  // if elem == currElem
-			Code.put(Code.pop);
-			Code.put(Code.pop);
-			jm.addJump("setAddElemEnd");
+		Code.For(() -> { // setAdr, elem, index
+			Code.swap(1, 0, 2); // elem, index, setAdr
+			Code.dupli(0); // elem, index, setAdr, setAdr
+			Code.swap(0, 2); // elem, setAdr, setAdr, index
+			Code.setGetElem(); // elem, setAdr, currElem
+			Code.swap(1, 2); // setAdr, elem, currElem
+			Code.dupli(1); // setAdr, elem, currElem, elem
+			
+			Code.If(Code.eq, () -> { // if elem == currElem
+				Code.put(Code.pop);
+				Code.put(Code.pop);
+				jm.addJump("end");
+			});
 		});
 		
-		Code.load(ind); // setAddr, elem, ind
-		Code.changeNum(1); // setAddr, elem, ind + 1
-		Code.store(ind); // setAddr, elem
+		Code.dupli(1); // setAdr, elem, setAdr
+		Code.loadConst(0); // setAdr, elem, setAdr, 0
+		Code.dupli(1); // setAdr, elem, setAdr, 0, setAdr
+		Code.setGetSize(); // setAdr, elem, setAdr, 0, setSize
+		Code.changeNum(1); // setAdr, elem, setAdr, 0, setSize + 1
+		Code.put(Code.astore); // setAdr, elem
 		
-		jm.addJump("setAddElem_forBegin"); // setAddr, elem
+		Code.dupli(1); // setAdr, elem, setAdr
 		
-		jm.addLabel("setAddElemEnd_forEnd");
-		
-		Code.dupli(1); // setAddr, elem, setAddr
-		Code.loadConst(0); // setAddr, elem, setAddr, 0
-		Code.dupli(1); // setAddr, elem, setAddr, 0, setAddr
-		Code.setGetSize(); // setAddr, elem, setAddr, 0, setSize
-		Code.changeNum(1); // setAddr, elem, setAddr, 0, setSize + 1
-		Code.put(Code.astore); // setAddr, elem
-		
-		Code.dupli(1); // setAddr, elem, setAddr
-		
-		Code.setGetSize(); // setAddr, elem, setSize
-		Code.swap(0, 1); // setAddr, setSize, elem
+		Code.setGetSize(); // setAdr, elem, setSize
+		Code.swap(0, 1); // setAdr, setSize, elem
 		
 		Code.put(Code.astore);
 		
-		jm.addLabel("setAddElemEnd");
+		jm.addLabel("end");
 	}
 	
 	// Expected stack: ..., num
@@ -168,17 +186,26 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		
 		jm.addLabel("forBegin");
 		
-		Code.load(ind); // Load the current index
+		Code.load(ind);
+		Code.load(max);
+		jm.addJump("forEnd", Code.ge);
 		
-		action.run(); // Execute the action
+		Code.load(ind);
 		
-		Code.load(ind); // Load the current index again
-		Code.changeNum(1); // Increment the index
-		Code.store(ind); // Store the incremented index
-		Code.load(max); // Load the maximum value
+		action.run();
 		
-		jm.addJump("forBegin", Code.lt); // Jump back to the beginning if condition is met
+		Code.load(ind);
+		Code.changeNum(1);
+		Code.store(ind);
+		
+		jm.addJump("forBegin"); // Jump back to the beginning if condition is met
 		jm.addLabel("forEnd");
+	}
+	
+	public static void enter(int formParam, int localParam) {
+		Code.put(Code.enter);
+		Code.put(formParam);
+		Code.put(formParam + localParam);
 	}
 }
 

@@ -10,6 +10,8 @@
                 <exclude name="Tab.java"/>
                 <exclude name="CodeGenerator.java"/>
                 <exclude name="CounterVisitor.java"/>
+                <exclude name="Code.java"/>
+                <exclude name="JumpManager.java"/>
             </fileset>
         </delete>
         <delete>

@@ -22,18 +22,20 @@ set s1, s2, s3;
 		//niz = new int[6];
 
 		//niz[0] = 1; niz[1] = 2; niz[2] = 3;
-		s1 = new set[3]; // s2 = new set[5]; s3 = new set[10];
+		s1 = new set[5]; // s2 = new set[5]; s3 = new set[10];
 		//print(s1);
 		add(s1, 7);
 		add(s1, 8);
 		print(s1);
 		print(eol);
-		//add(s1, 9);
-		//print(s1);
-		//
-		//print(s1);
-		//add(s1, 9);
-		//print(s1);
+		add(s1, 9);
+		print(s1);
+		print(eol);
+		add(s1, 9);
+		print(s1);
+		print(eol);
+		add(s1, 10);
+		print(s1);
 
 
 		//print(eol);

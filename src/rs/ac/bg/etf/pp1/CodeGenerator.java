@@ -24,30 +24,21 @@ public class CodeGenerator extends VisitorAdaptor {
 	public void visit(ProgName progName) {
 		Tab.find("chr").setAdr(Code.pc);
 		
-		Code.put(Code.enter);
-		
-		Code.put(1);
-		Code.put(1);
+		Code.enter(1,0);
 		
 		Code.put(Code.load_n);
 		Code.exitReturn();
 		
 		Tab.find("ord").setAdr(Code.pc);
 		
-		Code.put(Code.enter);
-		
-		Code.put(1);
-		Code.put(1);
+		Code.enter(1,0);
 		
 		Code.put(Code.load_n);
 		Code.exitReturn();
 		
 		Tab.find("len").setAdr(Code.pc);
 		
-		Code.put(Code.enter);
-		
-		Code.put(1);
-		Code.put(1);
+		Code.enter(1,0);
 		
 		Code.put(Code.load_n);
 		Code.put(Code.arraylength);
@@ -55,15 +46,38 @@ public class CodeGenerator extends VisitorAdaptor {
 		
 		Tab.find("add").setAdr(Code.pc);
 		
-		Code.put(Code.enter);
+		Code.enter(2, 0);
 		
-		Code.put(2); // 2 formal parameters
-		Code.put(2); // 0 local variables
-		
-		Code.put(Code.load_n);
-		Code.put(Code.load_1);
+		Code.put(Code.load_n); // Set address
+		Code.put(Code.load_1); // Element to add
 		
 		Code.setAddElem();
+		Code.exitReturn();
+		
+		Tab.find("addAll").setAdr(Code.pc);
+		
+		Code.enter(2, 0);
+		
+		Code.put(Code.load_n); // Set address
+		Code.put(Code.load_1); // Array address to add
+		
+		// setAdr, arrAdr
+		
+		Code.put(Code.dup); // setAdr, arrAdr, arrAdr
+		Code.put(Code.arraylength); // setAdr, arrAdr, arrSize
+		
+		Code.For(() -> { // setAdr, arrAdr, index
+			Code.dupli(1); // setAdr, arrAdr, index, arrAdr
+			Code.swap(0, 1); // setAdr, arrAdr, arrAdr, index
+			Code.put(Code.aload); // setAdr, arrAdr, elem
+			Code.swap(1, 2); // arrAdr, setAdr, elem
+			Code.dupli(1); // arrAdr, setAdr, elem, setAdr
+			Code.swap(0, 1); // arrAdr, setAdr, setAdr, elem
+			Code.setAddElem();
+		});
+		
+		Code.put(Code.pop);
+		Code.put(Code.pop);
 		
 		Code.exitReturn();
 	}
@@ -88,40 +102,21 @@ public class CodeGenerator extends VisitorAdaptor {
 		} else if (printStatementOptional.getExpr().struct == Tab.setType) {
 			analyzer.report_info(printStatementOptional, "CODE LOAD PRINT NO WIDTH CONST: 1");
 			
-			Obj ind = Tab.insertTemp(Obj.Var, "setPrintInd", Tab.intType);
-			Code.loadConst(0); // Initialize index to 0
-			Code.store(ind); // Store index in temporary variable
+			Code.put(Code.dup); // setAdr, setAdr
+			Code.setGetSize(); // setAdr, setSize
+			Code.For(() -> { // setAdr, index
+				Code.dupli(1); // setAdr, index, setAdr
+				Code.swap(0, 1); // setAdr, setAdr, index
+				Code.setGetElem(); // setAdr, elem
+				
+				Code.loadConst(0);
+				Code.put(Code.print);
+				
+				Code.loadConst(' ');
+				Code.loadConst(1);
+				Code.put(Code.bprint);
+			});
 			
-			// Expected stack: ..., setAddr
-			Code.put(Code.dup);
-			Code.loadConst(0); // Load set address
-			Code.put(Code.aload); // Load set[0] (size of the set)
-			
-			Code.loadConst(1);
-			Code.put(Code.add); // set[0] + 1
-			int forJumpStart = Code.pc; // Save jump address for the start of the loop
-			Code.loadConst(1);
-			Code.put(Code.sub); // set[0] - 1
-			Code.put(Code.dup); // Duplicate the size for condition check
-			
-			Code.loadConst(0);
-			Code.putFalseJump(Code.ne, 0);
-			int jumpToEnd = Code.pc - 2;
-			
-			Code.put(Code.dup2);
-			Code.put(Code.aload);
-			
-			Code.loadConst(0);
-			Code.put(Code.print);
-			
-			Code.loadConst(' ');
-			Code.loadConst(1);
-			Code.put(Code.bprint);
-			
-			Code.putJump(forJumpStart);
-			Code.fixup(jumpToEnd);
-			
-			Code.put(Code.pop); // Pop the size of the set
 			Code.put(Code.pop); // Pop the set address
 		} else {
 			analyzer.report_error(printStatementOptional, "Unsupported type for print statement");
@@ -294,6 +289,15 @@ public class CodeGenerator extends VisitorAdaptor {
 		if (func.getType() != Tab.noType) {
 			Code.put(Code.pop);
 		}
+	}
+	
+	
+	public void visit(DesignatorStatementSet designatorStatement) {
+		analyzer.report_info(designatorStatement, "SET ASSIGN " + designatorStatement.getDesignator().obj.getName() + " BY UNION OF " + designatorStatement.getDesignator1().obj.getName() + " AND " + designatorStatement.getDesignator2().obj.getName());
+		
+		Obj designatorObj = designatorStatement.getDesignator().obj;
+		
+		Code.store(designatorObj);
 	}
 	
 	// ======================================== //
