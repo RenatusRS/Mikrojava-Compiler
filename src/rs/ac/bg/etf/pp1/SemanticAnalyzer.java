@@ -29,9 +29,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		));
 		
 		addMethod("addAll", Tab.noType, Arrays.asList(
-		 		new AbstractMap.SimpleEntry<>("aa", Tab.setType),
-		 		new AbstractMap.SimpleEntry<>("bb", new Struct(Struct.Array, Tab.intType))
-		 ));
+				new AbstractMap.SimpleEntry<>("aa", Tab.setType),
+				new AbstractMap.SimpleEntry<>("bb", new Struct(Struct.Array, Tab.intType))
+		));
 		
 		Obj ordMethod = Tab.find("ord");
 		if (ordMethod == Tab.noObj) {
@@ -373,7 +373,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		Struct exprType = printStmt.getPrintStatementOptional().struct;
 		if (!Arrays.asList(Tab.intType, Tab.charType, Tab.boolType, Tab.setType).contains(exprType)) {
 			analyzer.report_error(printStmt, "Print statement expression is not of type int, char, bool or set");
-			return;
 		}
 	}
 	
@@ -393,7 +392,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		
 		if (!Arrays.asList(Tab.intType, Tab.charType, Tab.boolType).contains(statement.getDesignator().obj.getType())) {
 			analyzer.report_error(statement, "Read statement designator is not of type int, char or bool");
-			return;
 		}
 	}
 	

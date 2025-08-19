@@ -24,21 +24,21 @@ public class CodeGenerator extends VisitorAdaptor {
 	public void visit(ProgName progName) {
 		Tab.find("chr").setAdr(Code.pc);
 		
-		Code.enter(1,0);
+		Code.enter(1, 0);
 		
 		Code.put(Code.load_n);
 		Code.exitReturn();
 		
 		Tab.find("ord").setAdr(Code.pc);
 		
-		Code.enter(1,0);
+		Code.enter(1, 0);
 		
 		Code.put(Code.load_n);
 		Code.exitReturn();
 		
 		Tab.find("len").setAdr(Code.pc);
 		
-		Code.enter(1,0);
+		Code.enter(1, 0);
 		
 		Code.put(Code.load_n);
 		Code.put(Code.arraylength);
@@ -240,7 +240,6 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.store(designatorObj);
 	}
 	
-	
 	public void visit(DesignatorName designatorName) {
 		if (designatorName.getParent() instanceof DesignatorVar) {
 			analyzer.report_info(designatorName, "SKIPPING LOAD FOR PARENT " + designatorName.getParent().getClass().getSimpleName());
@@ -321,7 +320,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		if (factor.struct.getElemType() == Tab.charType) {
 			analyzer.report_info(factor, "ARRAY CREATE: Char");
 			Code.put(Code.newarray);
-			Code.put( 1);
+			Code.put(1);
 		} else if (factor.struct.getElemType() == Tab.intType) {
 			analyzer.report_info(factor, "ARRAY CREATE: Int");
 			Code.put(Code.newarray);
