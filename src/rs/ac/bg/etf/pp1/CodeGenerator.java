@@ -81,6 +81,11 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(Code.pop);
 		
 		Code.exitReturn();
+		
+		Tab.find("test").setAdr(Code.pc);
+		Code.enter(2, 0);
+		
+		
 	}
 	
 	Stack<Integer> fixUps = new Stack<>();
@@ -320,11 +325,11 @@ public class CodeGenerator extends VisitorAdaptor {
 		if (factor.struct.getElemType() == Tab.charType) {
 			analyzer.report_info(factor, "ARRAY CREATE: Char");
 			Code.put(Code.newarray);
-			Code.put(1);
+			Code.put(0);
 		} else if (factor.struct.getElemType() == Tab.intType) {
 			analyzer.report_info(factor, "ARRAY CREATE: Int");
 			Code.put(Code.newarray);
-			Code.put(0);
+			Code.put(1);
 		} else if (factor.struct == Tab.setType) {
 			analyzer.report_info(factor, "ARRAY CREATE: Set");
 			Code.put(Code.const_1);
@@ -369,7 +374,8 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(Code.add); // ..., set1, set2, sizeSet1 + sizeSet2
 		Code.loadConst(1);
 		Code.put(Code.add); // ..., set1, set2, sizeSet1 + sizeSet2 + 1
-		Code.put(Code.newarray); Code.put(1); // ..., set1, set2, newSet
+		Code.put(Code.newarray);
+		Code.put(1); // ..., set1, set2, newSet
 		
 		Code.swap(0, 1); // ..., set1, newSet, set2
 		
@@ -482,71 +488,131 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	public static String codeToString(int code) {
 		switch (code) {
-			case 1: return "LOAD";
-			case 2: return "LOAD_N";
-			case 3: return "LOAD_1";
-			case 4: return "LOAD_2";
-			case 5: return "LOAD_3";
-			case 6: return "STORE";
-			case 7: return "STORE_N";
-			case 8: return "STORE_1";
-			case 9: return "STORE_2";
-			case 10: return "STORE_3";
-			case 11: return "GETSTATIC";
-			case 12: return "PUTSTATIC";
-			case 13: return "GETFIELD";
-			case 14: return "PUTFIELD";
-			case 15: return "CONST_N";
-			case 16: return "CONST_1";
-			case 17: return "CONST_2";
-			case 18: return "CONST_3";
-			case 19: return "CONST_4";
-			case 20: return "CONST_5";
-			case 21: return "CONST_M1";
-			case 22: return "CONST_";
-			case 23: return "ADD";
-			case 24: return "SUB";
-			case 25: return "MUL";
-			case 26: return "DIV";
-			case 27: return "REM";
-			case 28: return "NEG";
-			case 29: return "SHL";
-			case 30: return "SHR";
-			case 31: return "INC";
-			case 32: return "NEW_";
-			case 33: return "NEWARRAY";
-			case 34: return "ALOAD";
-			case 35: return "ASTORE";
-			case 36: return "BALOAD";
-			case 37: return "BASTORE";
-			case 38: return "ARRAYLENGTH";
-			case 39: return "POP";
-			case 40: return "DUP";
-			case 41: return "DUP2";
-			case 42: return "JMP";
-			case 43: return "JCC";
-			case 44: return "JCC_1";
-			case 45: return "JCC_2";
-			case 46: return "JCC_3";
-			case 47: return "JCC_4";
-			case 48: return "JCC_5";
-			case 49: return "CALL";
-			case 50: return "RETURN_";
-			case 51: return "ENTER";
-			case 52: return "EXIT";
-			case 53: return "READ";
-			case 54: return "PRINT";
-			case 55: return "BREAD";
-			case 56: return "BPRINT";
-			case 57: return "TRAP";
-			case 58: return "INVOKEVIRTUAL";
-			case 59: return "DUP_X1";
-			case 60: return "DUP_X2";
-			default: return "UNKNOWN";
+			case 1:
+				return "LOAD";
+			case 2:
+				return "LOAD_N";
+			case 3:
+				return "LOAD_1";
+			case 4:
+				return "LOAD_2";
+			case 5:
+				return "LOAD_3";
+			case 6:
+				return "STORE";
+			case 7:
+				return "STORE_N";
+			case 8:
+				return "STORE_1";
+			case 9:
+				return "STORE_2";
+			case 10:
+				return "STORE_3";
+			case 11:
+				return "GETSTATIC";
+			case 12:
+				return "PUTSTATIC";
+			case 13:
+				return "GETFIELD";
+			case 14:
+				return "PUTFIELD";
+			case 15:
+				return "CONST_N";
+			case 16:
+				return "CONST_1";
+			case 17:
+				return "CONST_2";
+			case 18:
+				return "CONST_3";
+			case 19:
+				return "CONST_4";
+			case 20:
+				return "CONST_5";
+			case 21:
+				return "CONST_M1";
+			case 22:
+				return "CONST_";
+			case 23:
+				return "ADD";
+			case 24:
+				return "SUB";
+			case 25:
+				return "MUL";
+			case 26:
+				return "DIV";
+			case 27:
+				return "REM";
+			case 28:
+				return "NEG";
+			case 29:
+				return "SHL";
+			case 30:
+				return "SHR";
+			case 31:
+				return "INC";
+			case 32:
+				return "NEW_";
+			case 33:
+				return "NEWARRAY";
+			case 34:
+				return "ALOAD";
+			case 35:
+				return "ASTORE";
+			case 36:
+				return "BALOAD";
+			case 37:
+				return "BASTORE";
+			case 38:
+				return "ARRAYLENGTH";
+			case 39:
+				return "POP";
+			case 40:
+				return "DUP";
+			case 41:
+				return "DUP2";
+			case 42:
+				return "JMP";
+			case 43:
+				return "JCC";
+			case 44:
+				return "JCC_1";
+			case 45:
+				return "JCC_2";
+			case 46:
+				return "JCC_3";
+			case 47:
+				return "JCC_4";
+			case 48:
+				return "JCC_5";
+			case 49:
+				return "CALL";
+			case 50:
+				return "RETURN_";
+			case 51:
+				return "ENTER";
+			case 52:
+				return "EXIT";
+			case 53:
+				return "READ";
+			case 54:
+				return "PRINT";
+			case 55:
+				return "BREAD";
+			case 56:
+				return "BPRINT";
+			case 57:
+				return "TRAP";
+			case 58:
+				return "INVOKEVIRTUAL";
+			case 59:
+				return "DUP_X1";
+			case 60:
+				return "DUP_X2";
+			default:
+				return "UNKNOWN";
 		}
 	}
-
-
+	
 	
 }
 

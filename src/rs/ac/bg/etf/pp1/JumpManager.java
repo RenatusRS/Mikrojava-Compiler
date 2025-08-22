@@ -39,7 +39,7 @@ public class JumpManager {
 		jumpList.add(Code.pc - 2);
 	}
 	
-	public void addLabel(String label) {
+	public void setLabel(String label) {
 		ArrayList<Integer> jumpList = jumps.get(label);
 		
 		if (jumpList != null) {

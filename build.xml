@@ -6,6 +6,7 @@
             <fileset dir="src/rs/ac/bg/etf/pp1">
                 <exclude name="util/Log4JUtils.java"/>
                 <exclude name="util/Analyzer.java"/>
+                <exclude name="util/IfBlock.java"/>
                 <exclude name="SemanticAnalyzer.java"/>
                 <exclude name="Tab.java"/>
                 <exclude name="CodeGenerator.java"/>
@@ -71,21 +72,21 @@
 
     <target name="debug" depends="disasm">
         <java classname="rs.etf.pp1.mj.runtime.Run">
-            <arg value="test/program.obj" />
-            <arg value="-debug" />
+            <arg value="test/program.obj"/>
+            <arg value="-debug"/>
             <redirector input="input.txt" output="output.txt" error="error.txt" alwayslog="true"/>
             <classpath>
-                <pathelement location="lib/mj-runtime-1.1.jar" />
+                <pathelement location="lib/mj-runtime-1.1.jar"/>
             </classpath>
         </java>
     </target>
 
     <target name="run" depends="disasm">
         <java classname="rs.etf.pp1.mj.runtime.Run">
-            <arg value="test/program.obj" />
+            <arg value="test/program.obj"/>
             <redirector input="input.txt" output="output.txt" error="error.txt" alwayslog="true"/>
             <classpath>
-                <pathelement location="lib/mj-runtime-1.1.jar" />
+                <pathelement location="lib/mj-runtime-1.1.jar"/>
             </classpath>
         </java>
     </target>

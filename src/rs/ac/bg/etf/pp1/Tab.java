@@ -29,9 +29,9 @@ public class Tab extends rs.etf.pp1.symboltable.Tab {
 		analyzer.report_info(node, "Scope opened");
 	}
 	
-	public static Obj insertTemp(int kind, String name, Struct type) {
+	public static Obj insertTemp(int kind, Struct type) {
 		int adr = tempAdr;
-		Obj temp = Tab.insert(kind, "$" + name + adr, type);
+		Obj temp = Tab.insert(kind, "$" + adr, type);
 		temp.setLevel(1);
 		temp.setAdr(tempAdr);
 		tempAdr++;

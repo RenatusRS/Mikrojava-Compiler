@@ -1,8 +1,11 @@
 package rs.ac.bg.etf.pp1;
 
+import rs.ac.bg.etf.pp1.util.IfBlock;
 import rs.etf.pp1.symboltable.concepts.Obj;
 
 public class Code extends rs.etf.pp1.mj.runtime.Code {
+	private static int printConst = 1337;
+	
 	public static void swap(int pos1, int pos2) {
 		if (pos1 == pos2) {
 			return; // No need to swap if positions are the same
@@ -157,7 +160,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		
 		Code.put(Code.astore);
 		
-		jm.addLabel("end");
+		jm.setLabel("end");
 	}
 	
 	/**
@@ -185,12 +188,15 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * <br>
 	 * Returned stack: ...
 	 */
-	
-	public static void If(int comparison, Runnable action) {
-		Code.putFalseJump(comparison, 0);
-		int jumpAddress = Code.pc - 2; // Save the jump address
-		action.run(); // Execute the action
-		Code.fixup(jumpAddress);
+	public static IfBlock If(int comparison, Runnable action) {
+		JumpManager jm = new JumpManager();
+		jm.jump("else", inverse[comparison]);
+		action.run();
+		jm.jump("end");
+		jm.setLabel("else");
+		jm.setLabel("end");
+		
+		return new IfBlock(jm);
 	}
 	
 	/**
@@ -200,18 +206,18 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 */
 	public static void For(Runnable action) {
 		JumpManager jm = new JumpManager();
-		Obj max = Tab.insertTemp(Obj.Var, "forMax", Tab.intType);
+		Obj max = Tab.insertTemp(Obj.Var, Tab.intType);
 		Code.store(max);
 		
-		Obj ind = Tab.insertTemp(Obj.Var, "forInd", Tab.intType);
+		Obj ind = Tab.insertTemp(Obj.Var, Tab.intType);
 		Code.loadConst(0);
 		Code.store(ind);
 		
-		jm.addLabel("forBegin");
+		jm.setLabel("begin");
 		
 		Code.load(ind);
 		Code.load(max);
-		jm.jump("forEnd", Code.ge);
+		jm.jump("end", Code.ge);
 		
 		Code.load(ind);
 		
@@ -221,8 +227,8 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		Code.addNum(1);
 		Code.store(ind);
 		
-		jm.jump("forBegin");
-		jm.addLabel("forEnd");
+		jm.jump("begin");
+		jm.setLabel("end");
 	}
 	
 	public static void enter(int formParam, int localParam) {
@@ -237,15 +243,14 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * Returned stack: ..., elemMin
 	 */
 	public static void min() {
-		JumpManager jm = new JumpManager();
-		jm.jump("secondSmaller", Code.gt);
-		Code.put(Code.pop); // elem1
-		jm.jump("exit");
-		jm.addLabel("secondSmaller");
-		Code.put(Code.dup_x1); // elem2, elem1, elem2
-		Code.put(Code.pop); // elem2, elem1
-		Code.put(Code.pop); // elem2
-		jm.addLabel("exit");
+		Code.put(Code.dup2); // elem1, elem2, elem1, elem2
+		Code.If(Code.lt, () -> { // elem1, elem2
+			Code.put(Code.pop); // elem1
+		}).Else(() -> {
+			Code.put(Code.dup_x1); // elem2, elem1, elem2
+			Code.put(Code.pop); // elem2, elem1
+			Code.put(Code.pop); // elem2
+		});
 	}
 	
 	/**
@@ -254,15 +259,19 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * Returned stack: ..., elemMax
 	 */
 	public static void max() {
-		JumpManager jm = new JumpManager();
-		jm.jump("secondBigger", Code.lt);
-		Code.put(Code.pop); // elem1
-		jm.jump("exit");
-		jm.addLabel("secondBigger");
-		Code.put(Code.dup_x1); // elem2, elem1, elem2
-		Code.put(Code.pop); // elem2, elem1
-		Code.put(Code.pop); // elem2
-		jm.addLabel("exit");
+		Code.put(Code.dup2); // elem1, elem2, elem1, elem2
+		Code.If(Code.gt, () -> { // elem1, elem2
+			Code.put(Code.pop); // elem1
+		}).Else(() -> {
+			Code.put(Code.dup_x1); // elem2, elem1, elem2
+			Code.put(Code.pop); // elem2, elem1
+			Code.put(Code.pop); // elem2
+		});
+	}
+	
+	public static void log() {
+		Code.loadConst(printConst++);
+		Code.put(Code.pop);
 	}
 }
 
