@@ -39,7 +39,7 @@ public class Analyzer {
 			if (parent.getClass().getSimpleName().contains("Derived")) {
 				continue;
 			}
-
+			
 			parentInfo = parent.getClass().getSimpleName() + " > " + parentInfo;
 		}
 		
@@ -47,7 +47,7 @@ public class Analyzer {
 			return "Built-In: " + message;
 		}
 		
-		return "Line " + info.getLine() + " [" + parentInfo +  info.getClass().getSimpleName() + "]: " + message;
+		return "Line " + info.getLine() + " [" + parentInfo + info.getClass().getSimpleName() + "]: " + message;
 	}
 	
 	public void report_error(SyntaxNode info, String message) {
