@@ -37,7 +37,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		if (ordMethod == Tab.noObj) {
 			analyzer.report_error(null, "Method 'ord' not found in symbol table");
 		} else {
-			methods.put(ordMethod, Arrays.asList(Tab.charType));
+			methods.put(ordMethod, Collections.singletonList(Tab.charType));
 			analyzer.report_info(null, "Method 'ord' found in symbol table with return type '" + structToString(ordMethod.getType()) + "'");
 		}
 		
@@ -45,7 +45,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		if (chrMethod == Tab.noObj) {
 			analyzer.report_error(null, "Method 'chr' not found in symbol table");
 		} else {
-			methods.put(chrMethod, Arrays.asList(Tab.intType));
+			methods.put(chrMethod, Collections.singletonList(Tab.intType));
 			analyzer.report_info(null, "Method 'chr' found in symbol table with return type '" + structToString(chrMethod.getType()) + "'");
 		}
 		
@@ -53,7 +53,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		if (lenMethod == Tab.noObj) {
 			analyzer.report_error(null, "Method 'len' not found in symbol table");
 		} else {
-			methods.put(lenMethod, Arrays.asList(new Struct(Struct.Array, Tab.noType)));
+			methods.put(lenMethod, Collections.singletonList(new Struct(Struct.Array, Tab.noType)));
 			analyzer.report_info(null, "Method 'len' found in symbol table with return type '" + structToString(lenMethod.getType()) + "'");
 		}
 		
