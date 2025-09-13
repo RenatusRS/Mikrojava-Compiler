@@ -23,13 +23,9 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	public void visit(ProgName progName) {
 		Tab.find("chr").setAdr(Code.pc);
-		
-		Code.enter(1, 0);
-		
-		Code.put(Code.load_n);
-		Code.exitReturn();
-		
+		analyzer.report_info(progName, "Setting chr address to: " + Code.pc);
 		Tab.find("ord").setAdr(Code.pc);
+		analyzer.report_info(progName, "Setting ord address to: " + Code.pc);
 		
 		Code.enter(1, 0);
 		
@@ -37,6 +33,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.exitReturn();
 		
 		Tab.find("len").setAdr(Code.pc);
+		analyzer.report_info(progName, "Setting len address to: " + Code.pc);
 		
 		Code.enter(1, 0);
 		
@@ -45,6 +42,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.exitReturn();
 		
 		Tab.find("add").setAdr(Code.pc);
+		analyzer.report_info(progName, "Setting add address to: " + Code.pc);
 		
 		Code.enter(2, 0);
 		
@@ -55,6 +53,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.exitReturn();
 		
 		Tab.find("addAll").setAdr(Code.pc);
+		analyzer.report_info(progName, "Setting addAll address to: " + Code.pc);
 		
 		Code.enter(2, 0);
 		
@@ -82,10 +81,110 @@ public class CodeGenerator extends VisitorAdaptor {
 		
 		Code.exitReturn();
 		
-		Tab.find("test").setAdr(Code.pc);
-		Code.enter(2, 0);
+		Tab.find("minSet").setAdr(Code.pc);
+		analyzer.report_info(progName, "Setting minSet address to: " + Code.pc);
 		
+		Code.enter(1, 0);
 		
+		Code.put(Code.load_n); // Set address
+		Code.put(Code.dup); // setAdr, setAdr
+		Code.setGetSize(); // setAdr, setSize
+		Code.loadConst(999); // setAdr, setSize, currMin
+		
+		Code.swap(0, 1); // setAdr, currMin, setSize
+		Code.For(() -> { // setAdr, currMin, index
+			Code.swap(1, 2); // currMin, setAdr, index
+			Code.dupli(1); // currMin, setAdr, index, setAdr
+			Code.swap(0, 1); // currMin, setAdr, setAdr, index
+			Code.setGetElem(); // currMin, setAdr, elem
+			Code.swap(1, 2); // setAdr, currMin, elem
+			Code.min(); // setAdr, currMin
+		});
+		
+		Code.swap(0, 1); // currMin, setAdr
+		Code.put(Code.pop); // Pop the set address
+		
+		Code.exitReturn();
+		
+		Tab.find("ifTest").setAdr(Code.pc);
+		analyzer.report_info(progName, "Setting ifTest address to: " + Code.pc);
+		Code.enter(0, 0);
+		
+		Code.loadConst(5);
+		Code.loadConst(5);
+		Code.put(Code.dup2);
+		Code.If(Code.eq, () -> {
+			Code.loadConst(100);
+			Code.loadConst(1);
+			Code.put(Code.print);
+		});
+		
+		Code.If(Code.lt, () -> {
+			Code.loadConst(200);
+			Code.loadConst(1);
+			Code.put(Code.print);
+		}).Else(() -> {
+			Code.loadConst(300);
+			Code.loadConst(1);
+			Code.put(Code.print);
+		});
+		
+		Code.exitReturn();
+		
+		Tab.find("forTest").setAdr(Code.pc);
+		
+		Code.loadConst(5);
+		Code.For(() -> { // index1
+			Code.loadConst(10);
+			Code.For(() -> { // index1, index2
+				Code.loadConst(7);
+				Code.For(() -> { // index1, index2, index3
+					Code.loadConst(1);
+					Code.put(Code.print);
+					
+					Code.loadConst('-');
+					Code.loadConst(1);
+					Code.put(Code.bprint);
+					
+					Code.dupli(0); // index1, index2, index2
+					Code.loadConst(1);
+					Code.put(Code.print); // index1, index2
+					
+					Code.loadConst('-');
+					Code.loadConst(1);
+					Code.put(Code.bprint);
+					
+					Code.swap(0, 1); // index2, index1
+					
+					Code.dupli(0); // index2, index1, index1
+					
+					Code.loadConst(1);
+					Code.put(Code.print); // index2, index1
+					Code.swap(0, 1);
+					
+					Code.printEol();
+				});
+				Code.put(Code.pop);
+			});
+			Code.put(Code.pop);
+		});
+		
+		Code.exitReturn();
+	}
+	
+	private void addFunc(String name, int formPars, int localVars, Runnable action) {
+		Obj func = Tab.find(name);
+		func.setAdr(Code.pc);
+		
+		analyzer.report_info(null, "BEGIN METHOD " + name + " | PARS: " + formPars + ", VARS: " + localVars);
+		
+		Code.enter(formPars, localVars);
+		
+		action.run();
+		
+		analyzer.report_info(null, "END METHOD " + name);
+		
+		Code.exitReturn();
 	}
 	
 	Stack<Integer> fixUps = new Stack<>();
@@ -193,24 +292,21 @@ public class CodeGenerator extends VisitorAdaptor {
 		
 		SyntaxNode methodNode = methodTypeName.getParent();
 		
-		CounterVisitor.VarCounter varCnt = new CounterVisitor.VarCounter();
-		methodNode.traverseTopDown(varCnt);
-		
 		CounterVisitor.FormParamCounter formParCnt = new CounterVisitor.FormParamCounter();
 		methodNode.traverseTopDown(formParCnt);
 		
-		analyzer.report_info(methodTypeName, "BEGIN " + methodTypeName.getName() + " | PARS: " + formParCnt.getCount() + ", VARS: " + varCnt.getCount());
+		CounterVisitor.VarCounter varCnt = new CounterVisitor.VarCounter();
+		methodNode.traverseTopDown(varCnt);
 		
-		Code.put(Code.enter);
-		Code.put(formParCnt.getCount());
-		Code.put(formParCnt.getCount() + varCnt.getCount());
+		analyzer.report_info(methodTypeName, "BEGIN METHOD " + methodTypeName.getName() + " | PARS: " + formParCnt.getCount() + ", VARS: " + varCnt.getCount());
+		
+		Code.enter(formParCnt.getCount(), varCnt.getCount());
 	}
 	
 	public void visit(MethodDecl methodDecl) {
-		analyzer.report_info(methodDecl, "END " + methodDecl.getMethodTypeName().getName());
+		analyzer.report_info(methodDecl, "END METHOD " + methodDecl.getMethodTypeName().getName());
 		
-		Code.put(Code.exit);
-		Code.put(Code.return_);
+		Code.exitReturn();
 	}
 	
 	// ======================================== //
@@ -268,14 +364,24 @@ public class CodeGenerator extends VisitorAdaptor {
 		} else if (parent instanceof FactorVar) {
 			analyzer.report_info(designator, "VAR LOAD: FactorVar");
 			Code.load(designator.obj);
-		} else analyzer.report_info(designator, "VAR LOAD SKIP");
+		} else analyzer.report_info(designator, "VAR LOAD SKIP, because of parent " + parent.getClass().getSimpleName());
 	}
 	
 	public void visit(DesignatorArray designator) {
+		analyzer.report_info(designator, "Designator kind is: " + objKindToString(designator.obj.getKind()));
+		
 		if (designator.getParent() instanceof FactorVar) {
 			analyzer.report_info(designator, "ARRAY LOAD: FactorVar");
 			Code.load(designator.obj);
-		} else analyzer.report_info(designator, "ARRAY LOAD SKIP");
+		} else if (designator.getParent() instanceof DesignatorStatementInc) {
+			analyzer.report_info(designator, "ARRAY LOAD: Inc");
+			Code.put(Code.dup2);
+			Code.load(designator.obj);
+		} else if (designator.getParent() instanceof DesignatorStatementDec) {
+			analyzer.report_info(designator, "ARRAY LOAD: Dec");
+			Code.put(Code.dup2);
+			Code.load(designator.obj);
+		} else analyzer.report_info(designator, "ARRAY LOAD SKIP, because of parent " + designator.getParent().getClass().getSimpleName());
 	}
 	
 	public void visit(DesignatorStatementFunc designatorStatement) {
@@ -317,8 +423,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	public void visit(ReturnStmt statement) {
 		analyzer.report_info(statement, "RETURN");
 		
-		Code.put(Code.exit);
-		Code.put(Code.return_);
+		Code.exitReturn();
 	}
 	
 	public void visit(FactorNewArray factor) {
@@ -485,6 +590,27 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	// CUSTOM FUNCTIONS
 	// ======================================== //
+	
+	public static String objKindToString(int kind) {
+		switch (kind) {
+			case Obj.Con:
+				return "Constant";
+			case Obj.Type:
+				return "Type";
+			case Obj.Var:
+				return "Variable";
+			case Obj.Fld:
+				return "Field";
+			case Obj.Meth:
+				return "Method";
+			case Obj.Prog:
+				return "Program";
+			case Obj.Elem:
+				return "Element";
+			default:
+				return "unknown";
+		}
+	}
 	
 	public static String codeToString(int code) {
 		switch (code) {

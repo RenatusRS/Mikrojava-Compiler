@@ -1,31 +1,24 @@
-// Test301
+// Test999 — “break-the-compiler” edition
+// Expected input (each line is one read):
+// 4
+// 7
+// 8
+// 12
+// 15
+// 20
 
-program test301
+program test999
 
-const int nula = 0;
-const int jedan = 1;
-const int pet = 5;
+int  arrA[];
 
-int niz[];
-char nizch[];
-
-int a;
-
-set s1, s2, s3;
+int  x;
 
 {
 	void main()
-		int bodovi;
-		int temp;
 	{
-		niz = new int[3];
-
-		niz[0] = 1; niz[1] = 2; niz[2] = 3;
-		s1 = new set[5];
-		add(s1, 1);
-		add(s1, 2);
-		add(s1, 3);
+		arrA = new int[1];
+		arrA[0] = 6;
+		arrA[0]++;
+		print(arrA[0]); // 2
 	}
 }
-
-

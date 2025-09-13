@@ -5,6 +5,11 @@ import rs.ac.bg.etf.pp1.util.Analyzer;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class Tab extends rs.etf.pp1.symboltable.Tab {
 	public static final Struct boolType = new Struct(Struct.Bool);
 	public static final Struct setType = new Struct(Struct.Enum);
@@ -29,13 +34,29 @@ public class Tab extends rs.etf.pp1.symboltable.Tab {
 		analyzer.report_info(node, "Scope opened");
 	}
 	
-	public static Obj insertTemp(int kind, Struct type) {
-		int adr = tempAdr;
-		Obj temp = Tab.insert(kind, "$" + adr, type);
-		temp.setLevel(1);
-		temp.setAdr(tempAdr);
-		tempAdr++;
-		analyzer.report_info(null, "Temporary variable inserted: " + temp.getName() + " at address " + temp.getAdr());
+	private static final Map<Struct, List<Obj>> objCache = new HashMap<>();
+	
+	public static Obj insertTemp(Struct type) {
+		List<Obj> cached = objCache.get(type);
+		Obj temp;
+		
+		if (cached != null && !cached.isEmpty()) {
+			temp = cached.remove(cached.size() - 1);
+			analyzer.report_info(null, "Reused temporary variable: " + temp.getName() + " at address " + temp.getAdr());
+		} else {
+			int adr = tempAdr;
+			tempAdr += 2;
+			temp = Tab.insert(Obj.Var, "$" + adr, type);
+			temp.setLevel(1);
+			temp.setAdr(adr);
+			analyzer.report_info(null, "New temporary variable inserted: " + temp.getName() + " at address " + temp.getAdr());
+		}
+		
 		return temp;
+	}
+	
+	public static void free(Obj obj) {
+		objCache.computeIfAbsent(obj.getType(), k -> new ArrayList<>()).add(obj);
+		analyzer.report_info(null, "Temporary variable freed: " + obj.getName());
 	}
 }

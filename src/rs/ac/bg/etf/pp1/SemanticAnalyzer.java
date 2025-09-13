@@ -33,6 +33,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				new AbstractMap.SimpleEntry<>("bb", new Struct(Struct.Array, Tab.intType))
 		));
 		
+		addMethod("minSet", Tab.intType, Collections.singletonList(
+				new AbstractMap.SimpleEntry<>("aa", Tab.setType)
+		));
+		
+		addMethod("ifTest", Tab.noType, Collections.emptyList());
+		addMethod("forTest", Tab.noType, Collections.emptyList());
+		
 		Obj ordMethod = Tab.find("ord");
 		if (ordMethod == Tab.noObj) {
 			analyzer.report_error(null, "Method 'ord' not found in symbol table");
@@ -315,8 +322,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	public void visit(DesignatorStatementInc designatorStatement) {
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
-		if (designatorObj.getKind() != Obj.Var) {
-			analyzer.report_error(designatorStatement, "Designator is not a variable");
+		if (designatorObj.getKind() != Obj.Var && designatorObj.getKind() != Obj.Elem) {
+			analyzer.report_error(designatorStatement, "Designator is not a variable or elem, its kind is '" + objToString(designatorObj.getKind()) + "'");
 			return;
 		}
 		

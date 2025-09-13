@@ -6,6 +6,8 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 public class Code extends rs.etf.pp1.mj.runtime.Code {
 	private static int printConst = 1337;
 	
+	public static final int eol = 10;
+	
 	public static void swap(int pos1, int pos2) {
 		if (pos1 == pos2) {
 			return; // No need to swap if positions are the same
@@ -206,10 +208,10 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 */
 	public static void For(Runnable action) {
 		JumpManager jm = new JumpManager();
-		Obj max = Tab.insertTemp(Obj.Var, Tab.intType);
+		Obj max = Tab.insertTemp(Tab.intType);
 		Code.store(max);
 		
-		Obj ind = Tab.insertTemp(Obj.Var, Tab.intType);
+		Obj ind = Tab.insertTemp(Tab.intType);
 		Code.loadConst(0);
 		Code.store(ind);
 		
@@ -229,6 +231,9 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		
 		jm.jump("begin");
 		jm.setLabel("end");
+		
+		Tab.free(ind);
+		Tab.free(max);
 	}
 	
 	public static void enter(int formParam, int localParam) {
@@ -272,6 +277,12 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	public static void log() {
 		Code.loadConst(printConst++);
 		Code.put(Code.pop);
+	}
+	
+	public static void printEol() {
+		Code.loadConst(eol);
+		Code.loadConst(1);
+		Code.put(Code.bprint);
 	}
 }
 

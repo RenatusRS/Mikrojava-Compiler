@@ -23,18 +23,13 @@ public class CounterVisitor extends VisitorAdaptor {
 	
 	public static class VarCounter extends CounterVisitor {
 		
-		public void visit(VarDecl varDecl) {
+		public void visit(MethodVarName varDecl) {
+			count++;
+		}
+		
+		public void visit(MethodVarArray varDecl) {
 			count++;
 		}
 		
 	}
-	
-	public static class ConstCounter extends CounterVisitor {
-		
-		public void visit(ConstDecl constDecl) {
-			count++;
-		}
-		
-	}
-	
 }
