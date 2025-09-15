@@ -152,6 +152,36 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		factor.struct = factor.getDesignator().obj.getType();
 	}
 	
+	public void visit(FactorVarInc factor) {
+		factor.struct = factor.getDesignator().obj.getType();
+		
+		Obj designatorObj = factor.getDesignator().obj;
+		
+		if (designatorObj.getKind() != Obj.Var && designatorObj.getKind() != Obj.Elem) {
+			analyzer.report_error(factor, "Designator is not a variable or elem, its kind is '" + objToString(designatorObj.getKind()) + "'");
+			return;
+		}
+		
+		if (designatorObj.getType() != Tab.intType) {
+			analyzer.report_error(factor, "Designator is not of type int");
+		}
+	}
+	
+	public void visit(FactorVarDec factor) {
+		factor.struct = factor.getDesignator().obj.getType();
+		
+		Obj designatorObj = factor.getDesignator().obj;
+		
+		if (designatorObj.getKind() != Obj.Var) {
+			analyzer.report_error(factor, "Designator is not a variable");
+			return;
+		}
+		
+		if (designatorObj.getType() != Tab.intType) {
+			analyzer.report_error(factor, "Designator is not of type int");
+		}
+	}
+	
 	public void visit(FactorExpression factor) {
 		factor.struct = factor.getExpr().struct;
 	}

@@ -22,161 +22,135 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(ProgName progName) {
-		Tab.find("chr").setAdr(Code.pc);
-		analyzer.report_info(progName, "Setting chr address to: " + Code.pc);
-		Tab.find("ord").setAdr(Code.pc);
-		analyzer.report_info(progName, "Setting ord address to: " + Code.pc);
-		
-		Code.enter(1, 0);
-		
-		Code.put(Code.load_n);
-		Code.exitReturn();
-		
-		Tab.find("len").setAdr(Code.pc);
-		analyzer.report_info(progName, "Setting len address to: " + Code.pc);
-		
-		Code.enter(1, 0);
-		
-		Code.put(Code.load_n);
-		Code.put(Code.arraylength);
-		Code.exitReturn();
-		
-		Tab.find("add").setAdr(Code.pc);
-		analyzer.report_info(progName, "Setting add address to: " + Code.pc);
-		
-		Code.enter(2, 0);
-		
-		Code.put(Code.load_n); // Set address
-		Code.put(Code.load_1); // Element to add
-		
-		Code.setAddElem();
-		Code.exitReturn();
-		
-		Tab.find("addAll").setAdr(Code.pc);
-		analyzer.report_info(progName, "Setting addAll address to: " + Code.pc);
-		
-		Code.enter(2, 0);
-		
-		Code.put(Code.load_n); // Set address
-		Code.put(Code.load_1); // Array address to add
-		
-		// setAdr, arrAdr
-		
-		Code.put(Code.dup); // setAdr, arrAdr, arrAdr
-		Code.put(Code.arraylength); // setAdr, arrAdr, arrSize
-		
-		Code.For(() -> { // setAdr, arrAdr, index
-			Code.dupli(1); // setAdr, arrAdr, index, arrAdr
-			Code.swap(0, 1); // setAdr, arrAdr, arrAdr, index
-			Code.put(Code.aload); // setAdr, arrAdr, elem
-			Code.swap(1, 2); // arrAdr, setAdr, elem
-			Code.dupli(1); // arrAdr, setAdr, elem, setAdr
-			Code.swap(0, 1); // arrAdr, setAdr, setAdr, elem
-			Code.setAddElem(); // arrAdr, setAdr
-			Code.swap(0, 1); // setAdr, arrAdr
+		addFunc("chr", 1, 0, () -> {
+			Code.put(Code.load_n);
 		});
 		
-		Code.put(Code.pop);
-		Code.put(Code.pop);
-		
-		Code.exitReturn();
-		
-		Tab.find("minSet").setAdr(Code.pc);
-		analyzer.report_info(progName, "Setting minSet address to: " + Code.pc);
-		
-		Code.enter(1, 0);
-		
-		Code.put(Code.load_n); // Set address
-		Code.put(Code.dup); // setAdr, setAdr
-		Code.setGetSize(); // setAdr, setSize
-		Code.loadConst(999); // setAdr, setSize, currMin
-		
-		Code.swap(0, 1); // setAdr, currMin, setSize
-		Code.For(() -> { // setAdr, currMin, index
-			Code.swap(1, 2); // currMin, setAdr, index
-			Code.dupli(1); // currMin, setAdr, index, setAdr
-			Code.swap(0, 1); // currMin, setAdr, setAdr, index
-			Code.setGetElem(); // currMin, setAdr, elem
-			Code.swap(1, 2); // setAdr, currMin, elem
-			Code.min(); // setAdr, currMin
+		addFunc("ord", 1, 0, () -> {
+			Code.put(Code.load_n);
 		});
 		
-		Code.swap(0, 1); // currMin, setAdr
-		Code.put(Code.pop); // Pop the set address
-		
-		Code.exitReturn();
-		
-		Tab.find("ifTest").setAdr(Code.pc);
-		analyzer.report_info(progName, "Setting ifTest address to: " + Code.pc);
-		Code.enter(0, 0);
-		
-		Code.loadConst(5);
-		Code.loadConst(5);
-		Code.put(Code.dup2);
-		Code.If(Code.eq, () -> {
-			Code.loadConst(100);
-			Code.loadConst(1);
-			Code.put(Code.print);
+		addFunc("len", 1, 0, () -> {
+			Code.put(Code.load_n);
+			Code.put(Code.arraylength);
 		});
 		
-		Code.If(Code.lt, () -> {
-			Code.loadConst(200);
-			Code.loadConst(1);
-			Code.put(Code.print);
-		}).Else(() -> {
-			Code.loadConst(300);
-			Code.loadConst(1);
-			Code.put(Code.print);
+		addFunc("add", 2, 0, () -> {
+			Code.put(Code.load_n); // Set address
+			Code.put(Code.load_1); // Element to add
+			
+			Code.setAddElem();
 		});
 		
-		Code.exitReturn();
-		
-		Tab.find("forTest").setAdr(Code.pc);
-		
-		Code.loadConst(5);
-		Code.For(() -> { // index1
-			Code.loadConst(10);
-			Code.For(() -> { // index1, index2
-				Code.loadConst(7);
-				Code.For(() -> { // index1, index2, index3
-					Code.loadConst(1);
-					Code.put(Code.print);
-					
-					Code.loadConst('-');
-					Code.loadConst(1);
-					Code.put(Code.bprint);
-					
-					Code.dupli(0); // index1, index2, index2
-					Code.loadConst(1);
-					Code.put(Code.print); // index1, index2
-					
-					Code.loadConst('-');
-					Code.loadConst(1);
-					Code.put(Code.bprint);
-					
-					Code.swap(0, 1); // index2, index1
-					
-					Code.dupli(0); // index2, index1, index1
-					
-					Code.loadConst(1);
-					Code.put(Code.print); // index2, index1
-					Code.swap(0, 1);
-					
-					Code.printEol();
-				});
-				Code.put(Code.pop);
+		addFunc("addAll", 2, 0, () -> {
+			Code.put(Code.load_n); // Set address
+			Code.put(Code.load_1); // Array address to add
+			
+			// setAdr, arrAdr
+			
+			Code.put(Code.dup); // setAdr, arrAdr, arrAdr
+			Code.put(Code.arraylength); // setAdr, arrAdr, arrSize
+			
+			Code.For(() -> { // setAdr, arrAdr, index
+				Code.dupli(1); // setAdr, arrAdr, index, arrAdr
+				Code.swap(0, 1); // setAdr, arrAdr, arrAdr, index
+				Code.put(Code.aload); // setAdr, arrAdr, elem
+				Code.swap(1, 2); // arrAdr, setAdr, elem
+				Code.dupli(1); // arrAdr, setAdr, elem, setAdr
+				Code.swap(0, 1); // arrAdr, setAdr, setAdr, elem
+				Code.setAddElem(); // arrAdr, setAdr
+				Code.swap(0, 1); // setAdr, arrAdr
 			});
+			
+			Code.put(Code.pop);
 			Code.put(Code.pop);
 		});
 		
-		Code.exitReturn();
+		addFunc("minSet", 1, 0, () -> {
+			Code.put(Code.load_n); // Set address
+			Code.put(Code.dup); // setAdr, setAdr
+			Code.setGetSize(); // setAdr, setSize
+			Code.loadConst(999); // setAdr, setSize, currMin
+			
+			Code.swap(0, 1); // setAdr, currMin, setSize
+			Code.For(() -> { // setAdr, currMin, index
+				Code.swap(1, 2); // currMin, setAdr, index
+				Code.dupli(1); // currMin, setAdr, index, setAdr
+				Code.swap(0, 1); // currMin, setAdr, setAdr, index
+				Code.setGetElem(); // currMin, setAdr, elem
+				Code.swap(1, 2); // setAdr, currMin, elem
+				Code.min(); // setAdr, currMin
+			});
+			
+			Code.swap(0, 1); // currMin, setAdr
+			Code.put(Code.pop); // Pop the set address
+		});
+		
+		addFunc("ifTest", 0, 0, () -> {
+			Code.loadConst(5);
+			Code.loadConst(5);
+			Code.put(Code.dup2);
+			Code.If(Code.eq, () -> {
+				Code.loadConst(100);
+				Code.loadConst(1);
+				Code.put(Code.print);
+			});
+			
+			Code.If(Code.lt, () -> {
+				Code.loadConst(200);
+				Code.loadConst(1);
+				Code.put(Code.print);
+			}).Else(() -> {
+				Code.loadConst(300);
+				Code.loadConst(1);
+				Code.put(Code.print);
+			});
+		});
+		
+		addFunc("forTest", 0, 0, () -> {
+			Code.loadConst(5);
+			Code.For(() -> { // index1
+				Code.loadConst(10);
+				Code.For(() -> { // index1, index2
+					Code.loadConst(7);
+					Code.For(() -> { // index1, index2, index3
+						Code.loadConst(1);
+						Code.put(Code.print);
+						
+						Code.loadConst('-');
+						Code.loadConst(1);
+						Code.put(Code.bprint);
+						
+						Code.dupli(0); // index1, index2, index2
+						Code.loadConst(1);
+						Code.put(Code.print); // index1, index2
+						
+						Code.loadConst('-');
+						Code.loadConst(1);
+						Code.put(Code.bprint);
+						
+						Code.swap(0, 1); // index2, index1
+						
+						Code.dupli(0); // index2, index1, index1
+						
+						Code.loadConst(1);
+						Code.put(Code.print); // index2, index1
+						Code.swap(0, 1);
+						
+						Code.printEol();
+					});
+					Code.put(Code.pop);
+				});
+				Code.put(Code.pop);
+			});
+		});
 	}
 	
 	private void addFunc(String name, int formPars, int localVars, Runnable action) {
 		Obj func = Tab.find(name);
 		func.setAdr(Code.pc);
 		
-		analyzer.report_info(null, "BEGIN METHOD " + name + " | PARS: " + formPars + ", VARS: " + localVars);
+		analyzer.report_info(null, "BEGIN METHOD " + name + " | PARS: " + formPars + ", VARS: " + localVars + " AT ADDR: " + func.getAdr());
 		
 		Code.enter(formPars, localVars);
 		
@@ -312,36 +286,17 @@ public class CodeGenerator extends VisitorAdaptor {
 	// ======================================== //
 	// DESIGNATOR STATEMENT
 	// ======================================== //
-	
-	public void visit(DesignatorStatementInc designatorStatement) {
-		analyzer.report_info(designatorStatement, "INC");
-		
-		Obj designatorObj = designatorStatement.getDesignator().obj;
-		
-		Code.loadConst(1);
-		Code.put(Code.add);
-		Code.store(designatorObj);
-	}
-	
-	public void visit(DesignatorStatementDec designatorStatement) {
-		analyzer.report_info(designatorStatement, "DEC");
-		
-		Obj designatorObj = designatorStatement.getDesignator().obj;
-		
-		Code.loadConst(1);
-		Code.put(Code.sub);
-		Code.store(designatorObj);
-	}
-	
 	public void visit(DesignatorStatementAssign designatorStatement) {
 		analyzer.report_info(designatorStatement, "ASSIGN TO: " + designatorStatement.getDesignator().obj.getName());
 		
 		Obj designatorObj = designatorStatement.getDesignator().obj;
 		
+		// for non-arrays its okay, for arrays it expects array address, index and value on stack
 		Code.store(designatorObj);
 	}
 	
 	public void visit(DesignatorName designatorName) {
+		// load only for arrays because vars don't need address and index on stack
 		if (designatorName.getParent() instanceof DesignatorVar) {
 			analyzer.report_info(designatorName, "SKIPPING LOAD FOR PARENT " + designatorName.getParent().getClass().getSimpleName());
 			return;
@@ -349,38 +304,83 @@ public class CodeGenerator extends VisitorAdaptor {
 		
 		analyzer.report_info(designatorName, "DESIGNATOR LOADED FROM: " + designatorName.obj.getName());
 		
+		// for non-arrays its okay, for arrays it expects array address and index on stack
 		Code.load(designatorName.obj);
 	}
 	
 	public void visit(DesignatorVar designator) {
 		SyntaxNode parent = designator.getParent();
 		
+		// Load only if designator is used in an expression, not as a target of an assignment
 		if (parent instanceof DesignatorStatementInc) {
 			analyzer.report_info(designator, "VAR LOAD: Inc");
 			Code.load(designator.obj);
+			Code.addNum(1);
+			Code.store(designator.obj);
 		} else if (parent instanceof DesignatorStatementDec) {
 			analyzer.report_info(designator, "VAR LOAD: Dec");
 			Code.load(designator.obj);
+			Code.addNum(-1);
+			Code.store(designator.obj);
 		} else if (parent instanceof FactorVar) {
 			analyzer.report_info(designator, "VAR LOAD: FactorVar");
 			Code.load(designator.obj);
+		} else if (parent instanceof FactorVarInc) {
+			analyzer.report_info(designator, "VAR LOAD: FactorVarInc");
+			Code.load(designator.obj);
+			Code.put(Code.dup); // Duplicate because we need original value for expression use
+			Code.addNum(1);
+			Code.store(designator.obj);
+		} else if (parent instanceof FactorVarDec) {
+			analyzer.report_info(designator, "VAR LOAD: FactorVarDec");
+			Code.put(Code.dup);
+			Code.addNum(-1);
+			Code.store(designator.obj);
 		} else analyzer.report_info(designator, "VAR LOAD SKIP, because of parent " + parent.getClass().getSimpleName());
 	}
 	
 	public void visit(DesignatorArray designator) {
 		analyzer.report_info(designator, "Designator kind is: " + objKindToString(designator.obj.getKind()));
 		
-		if (designator.getParent() instanceof FactorVar) {
-			analyzer.report_info(designator, "ARRAY LOAD: FactorVar");
-			Code.load(designator.obj);
-		} else if (designator.getParent() instanceof DesignatorStatementInc) {
+		// when we arrive here, the array address and index are already on stack
+		if (designator.getParent() instanceof DesignatorStatementInc) {
 			analyzer.report_info(designator, "ARRAY LOAD: Inc");
-			Code.put(Code.dup2);
-			Code.load(designator.obj);
+			// arr, ind
+			Code.put(Code.dup2); // arr, ind, arr, ind
+			Code.put(Code.aload); // arr, ind, val
+			Code.addNum(1); // arr, ind, val+1
+			Code.put(Code.astore); // ...
 		} else if (designator.getParent() instanceof DesignatorStatementDec) {
 			analyzer.report_info(designator, "ARRAY LOAD: Dec");
 			Code.put(Code.dup2);
+			Code.put(Code.aload); // arr, ind, val
+			Code.addNum(-1); // arr, ind, val-1
+			Code.put(Code.astore); // ...
+		} else if (designator.getParent() instanceof FactorVar) {
+			analyzer.report_info(designator, "ARRAY LOAD: FactorVar");
 			Code.load(designator.obj);
+		} else if (designator.getParent() instanceof FactorVarInc) {
+			analyzer.report_info(designator, "ARRAY LOAD: FactorVarInc");
+			// arr, ind
+			Code.put(Code.dup2); // arr, ind, arr, ind
+			Code.put(Code.aload); // arr, ind, val
+			Code.swap(0, 2, 1); // val, arr, ind
+			Code.put(Code.dup2); // val, arr, ind, arr, ind
+			Code.put(Code.aload); // val, arr, ind, val
+			Code.addNum(1); // val, arr, ind, val+1
+			Code.put(Code.astore); // val
+			
+		} else if (designator.getParent() instanceof FactorVarDec) {
+			analyzer.report_info(designator, "ARRAY LOAD: FactorVarInc");
+			// arr, ind
+			Code.put(Code.dup2); // arr, ind, arr, ind
+			Code.put(Code.aload); // arr, ind, val
+			Code.swap(0, 2, 1); // val, arr, ind
+			Code.put(Code.dup2); // val, arr, ind, arr, ind
+			Code.put(Code.aload); // val, arr, ind, val
+			Code.addNum(-1); // val, arr, ind, val+1
+			Code.put(Code.astore); // val
+			
 		} else analyzer.report_info(designator, "ARRAY LOAD SKIP, because of parent " + designator.getParent().getClass().getSimpleName());
 	}
 	
@@ -422,7 +422,6 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	public void visit(ReturnStmt statement) {
 		analyzer.report_info(statement, "RETURN");
-		
 		Code.exitReturn();
 	}
 	

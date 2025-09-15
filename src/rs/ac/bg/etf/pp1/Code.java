@@ -19,23 +19,21 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 			pos2 = temp; // Ensure pos1 is always less than pos2
 		}
 		
-		if (pos1 == 0 && pos2 == 1) { // 1, 0 -> 0, 1
-			Code.put(Code.dup_x1); // 1, 0    -> 0, 1, 0
-			Code.put(Code.pop);    // 0, 1, 0 -> 0, 1
+		if (pos1 == 0 && pos2 == 1) { // 2 1 0 -> 2 0 1
+			Code.put(Code.dup_x1); // 1 0   -> 0 1 0
+			Code.put(Code.pop);    // 0 1 0 -> 0 1
 			
-		} else if (pos1 == 0 && pos2 == 2) { // 2, 1, 0 -> 0, 1, 2
-			Code.put(Code.dup_x2); // 2, 1, 0    -> 0, 2, 1, 0
-			Code.put(Code.pop);    // 0, 2, 1, 0 -> 0, 2, 1
-			Code.put(Code.dup_x1); // 0, 2, 1    -> 0, 1, 2, 1
-			Code.put(Code.pop);    // 0, 1, 2, 1 -> 0, 1, 2
+		} else if (pos1 == 0 && pos2 == 2) { // 2 1 0 -> 0 1 2
+			Code.put(Code.dup_x2); // 2 1 0   -> 0 2 1 0
+			Code.put(Code.pop);    // 0 2 1 0 -> 0 2 1
+			Code.put(Code.dup_x1); // 0 2 1   -> 0 1 2 1
+			Code.put(Code.pop);    // 0 1 2 1 -> 0 1 2
 			
-		} else if (pos1 == 1 && pos2 == 2) { // 2, 1, 0 -> 1, 2, 0
-			Code.put(Code.dup_x2); // 2, 1, 0    -> 0, 2, 1, 0
-			Code.put(Code.pop);    // 0, 2, 1, 0 -> 0, 2, 1
-			Code.put(Code.dup_x2); // 0, 2, 1    -> 1, 0, 2, 1
-			Code.put(Code.pop);    // 1, 0, 2, 1 -> 1, 0, 2
-			Code.put(Code.dup_x1); // 1, 0, 2    -> 1, 2, 0, 2
-			Code.put(Code.pop);    // 1, 2, 0, 2 -> 1, 2, 0
+		} else if (pos1 == 1 && pos2 == 2) { // 2 1 0 -> 1 2 0
+			Code.put(Code.dup_x1); // 2 1 0   -> 2, 0 1 0
+			Code.put(Code.pop);    // 2 0 1 0 -> 2 0 1
+			Code.put(Code.dup_x2); // 2 0 1   -> 1 2 0 1
+			Code.put(Code.pop);    // 1 2 0 1 -> 1 2 0
 			
 		} else {
 			throw new IllegalArgumentException("Invalid positions for swap: " + pos1 + ", " + pos2);
@@ -47,31 +45,24 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 			return;
 		}
 		
-		if (pos2 == 2 && pos1 == 0 && pos0 == 1) {        // 2 1 0  ->  2 0 1
-			Code.put(Code.dup_x1);
-			Code.put(Code.pop);
+		if (pos2 == 2 && pos1 == 0 && pos0 == 1) { // 2 1 0 -> 2 0 1
+			swap(0, 1);
 			
-		} else if (pos2 == 1 && pos1 == 2 && pos0 == 0) { // 2 1 0  ->  1 2 0
-			Code.put(Code.dup_x1);  // 2 1 0   -> 2 0 1 0
-			Code.put(Code.pop);     // 2 0 1 0 -> 2 0 1
-			Code.put(Code.dup_x2);  // 2 0 1   -> 1 2 0 1
-			Code.put(Code.pop);     // 1 2 0 1 -> 1 2 0
+		} else if (pos2 == 1 && pos1 == 2 && pos0 == 0) { // 2 1 0 -> 1 2 0
+			swap(1, 2);
 			
-		} else if (pos2 == 1 && pos1 == 0 && pos0 == 2) { // 2 1 0  ->  1 0 2
+		} else if (pos2 == 1 && pos1 == 0 && pos0 == 2) { // 2 1 0 -> 1 0 2
 			Code.put(Code.dup_x2);  // 2 1 0   -> 0 2 1 0
 			Code.put(Code.pop);     // 0 2 1 0 -> 0 2 1
 			Code.put(Code.dup_x2);  // 0 2 1   -> 1 0 2 1
 			Code.put(Code.pop);     // 1 0 2 1 -> 1 0 2
 			
-		} else if (pos2 == 0 && pos1 == 2 && pos0 == 1) { // 2 1 0  ->  0 2 1
+		} else if (pos2 == 0 && pos1 == 2 && pos0 == 1) { // 2 1 0 -> 0 2 1
 			Code.put(Code.dup_x2);  // 2 1 0 -> 0 2 1 0
 			Code.put(Code.pop);     // 0 2 1 0 -> 0 2 1
 			
-		} else if (pos2 == 0 && pos1 == 1 && pos0 == 2) { // 2 1 0  ->  0 1 2
-			Code.put(Code.dup_x2);  // 2 1 0   -> 0 2 1 0
-			Code.put(Code.pop);     // 0 2 1 0 -> 0 2 1
-			Code.put(Code.dup_x1);  // 0 2 1   -> 0 1 2 1
-			Code.put(Code.pop);     // 0 1 2 1 -> 0 1 2
+		} else if (pos2 == 0 && pos1 == 1 && pos0 == 2) { // 2 1 0 -> 0 1 2
+			swap(0, 2);
 			
 		} else {
 			throw new IllegalStateException("Unhandled 3-param permutation");
@@ -83,7 +74,6 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * <br>
 	 * Returned stack: ..., elem2, elem1, elem1 or elem2, elem1, elem2
 	 */
-	
 	public static void dupli(int pos) {
 		if (pos < 0 || pos > 1) {
 			throw new IllegalArgumentException("Position must be between 0 and 1, inclusive: " + pos);
@@ -142,8 +132,9 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 			Code.dupli(1); // setAdr, elem, currElem, elem
 			
 			Code.If(Code.eq, () -> { // if elem == currElem
-				Code.put(Code.pop);
-				Code.put(Code.pop);
+				// setAdr, elem
+				Code.put(Code.pop); // setAdr
+				Code.put(Code.pop); // ...
 				jm.jump("end");
 			});
 		});
@@ -160,7 +151,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		Code.setGetSize(); // setAdr, elem, setSize
 		Code.swap(0, 1); // setAdr, setSize, elem
 		
-		Code.put(Code.astore);
+		Code.put(Code.astore); // ...
 		
 		jm.setLabel("end");
 	}
@@ -170,19 +161,13 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * <br>
 	 * Returned stack: ..., num + change
 	 */
-	
 	public static void addNum(int change) {
 		if (change == 0) {
 			return;
 		}
 		
-		Code.loadConst(change);
-		
-		if (change > 0) {
-			Code.put(Code.add);
-		} else {
-			Code.put(Code.sub);
-		}
+		Code.loadConst(Math.abs(change));
+		Code.put(change > 0 ? Code.add : Code.sub);
 	}
 	
 	/**
@@ -207,33 +192,65 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * Pushes current loop index to the stack for the runnable action.
 	 */
 	public static void For(Runnable action) {
-		JumpManager jm = new JumpManager();
-		Obj max = Tab.insertTemp(Tab.intType);
-		Code.store(max);
-		
-		Obj ind = Tab.insertTemp(Tab.intType);
+		For(action, 1);
+	}
+	
+	/**
+	 * Expected stack: ..., timesToLoop
+	 * <br>
+	 * Pushes current loop index to the stack for the runnable action.
+	 */
+	public static void For(Runnable action, int step) {
 		Code.loadConst(0);
-		Code.store(ind);
+		ForFromTo(action, step);
+	}
+	
+	/**
+	 * Expected stack: ..., to, from
+	 * <br>
+	 * Pushes current loop index to the stack for the runnable action.
+	 */
+	public static void ForFromTo(Runnable action) {
+		ForFromTo(action, 1);
+	}
+	
+	/**
+	 * Expected stack: ..., to, from
+	 * <br>
+	 * Pushes current loop index to the stack for the runnable action.
+	 */
+	public static void ForFromTo(Runnable action, int step) {
+		if (step == 0) {
+			throw new IllegalArgumentException("Step cannot be 0");
+		}
+		
+		JumpManager jm = new JumpManager();
+		
+		Obj from = Tab.insertTemp(Tab.intType);
+		Code.store(from);
+		
+		Obj to = Tab.insertTemp(Tab.intType);
+		Code.store(to);
 		
 		jm.setLabel("begin");
 		
-		Code.load(ind);
-		Code.load(max);
-		jm.jump("end", Code.ge);
+		Code.load(from);
+		Code.load(to);
+		jm.jump("end", step > 0 ? Code.ge : Code.le);
 		
-		Code.load(ind);
+		Code.load(from);
 		
 		action.run();
 		
-		Code.load(ind);
-		Code.addNum(1);
-		Code.store(ind);
+		Code.load(from);
+		Code.addNum(step);
+		Code.store(from);
 		
 		jm.jump("begin");
 		jm.setLabel("end");
 		
-		Tab.free(ind);
-		Tab.free(max);
+		Tab.free(from);
+		Tab.free(to);
 	}
 	
 	public static void enter(int formParam, int localParam) {

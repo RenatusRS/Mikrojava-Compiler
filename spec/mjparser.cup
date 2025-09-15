@@ -263,6 +263,8 @@ Factor ::= (FactorVar) Designator
 	| (FactorConst) ConstValue
 	| (FactorExpression) LPAREN Expr RPAREN
 	| (FactorFuncCall) Designator LPAREN ActPars RPAREN
+	| (FactorVarInc) Designator INC
+	| (FactorVarDec) Designator DEC
 	| (FactorNewArray) NEW Type LBRACKET Expr RBRACKET;
 // EXAMPLE: 5 # 'a' # true # (5 + 6) # a(5, 6, 7) # new int[5] TODO check this order
 
