@@ -77,7 +77,7 @@ public class CodeGenerator extends VisitorAdaptor {
 				Code.swap(1, 2); // currMin, setAdr, index
 				Code.dupli(1); // currMin, setAdr, index, setAdr
 				Code.swap(0, 1); // currMin, setAdr, setAdr, index
-				Code.setGetElem(); // currMin, setAdr, elem
+				Code.getElem(Code.DataStructure.SET); // currMin, setAdr, elem
 				Code.swap(1, 2); // setAdr, currMin, elem
 				Code.min(); // setAdr, currMin
 			});
@@ -145,6 +145,11 @@ public class CodeGenerator extends VisitorAdaptor {
 				Code.put(Code.pop);
 			});
 		});
+		
+		addFunc("sort", 1, 0, () -> {
+			Code.put(Code.load_n);
+			Code.sort(Code.DataStructure.ARRAY);
+		});
 	}
 	
 	private void addFunc(String name, int formPars, int localVars, Runnable action) {
@@ -187,7 +192,7 @@ public class CodeGenerator extends VisitorAdaptor {
 			Code.For(() -> { // setAdr, index
 				Code.dupli(1); // setAdr, index, setAdr
 				Code.swap(0, 1); // setAdr, setAdr, index
-				Code.setGetElem(); // setAdr, elem
+				Code.getElem(Code.DataStructure.SET); // setAdr, elem
 				
 				Code.loadConst(0);
 				Code.put(Code.print);
@@ -489,7 +494,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.For(() -> { // ..., set1, newSet, set2, index);
 			Code.dupli(1); // ..., set1, newSet, set2, index, set2
 			Code.swap(0, 1); // ..., set1, newSet, set2, set2, index
-			Code.setGetElem(); // ..., set1, newSet, set2, elem
+			Code.getElem(Code.DataStructure.SET); // ..., set1, newSet, set2, elem
 			Code.swap(1, 2); // ..., set1, set2, newSet, elem
 			Code.dupli(1); // ..., set1, set2, newSet, elem, newSet
 			Code.swap(0, 1); // ..., set1, set2, newSet, newSet, elem
@@ -506,7 +511,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.For(() -> { // newSet, set1, index
 			Code.dupli(1); // newSet, set1, index, set1
 			Code.swap(0, 1); // newSet, set1, set1, index
-			Code.setGetElem(); // newSet, set1, elem
+			Code.getElem(Code.DataStructure.SET); // newSet, set1, elem
 			Code.swap(1, 2); // set1, newSet, elem
 			Code.dupli(1); // set1, newSet, elem, newSet
 			Code.swap(0, 1); // set1, newSet, newSet, elem

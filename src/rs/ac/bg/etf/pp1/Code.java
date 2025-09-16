@@ -1,14 +1,19 @@
 package rs.ac.bg.etf.pp1;
 
+import rs.ac.bg.etf.pp1.util.Analyzer;
 import rs.ac.bg.etf.pp1.util.IfBlock;
 import rs.etf.pp1.symboltable.concepts.Obj;
+
+import javax.xml.crypto.Data;
 
 public class Code extends rs.etf.pp1.mj.runtime.Code {
 	private static int printConst = 1337;
 	
+	private static final Analyzer analyzer = Analyzer.getInstance();
+	
 	public static final int eol = 10;
 	
-	enum DataStructure {
+	public enum DataStructure {
 		ARRAY,
 		SET
 	}
@@ -98,23 +103,96 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	}
 	
 	/**
-	 * Expected stack: ..., setAdr
+	 * Expected stack: ..., dsAdr
 	 * <br>
-	 * Returned stack: ..., setSize
+	 * Returned stack: ..., dsSize
 	 */
 	public static void getSize(DataStructure dataStructure) {
-		Code.loadConst(0);
-		Code.put(Code.aload);
+		switch (dataStructure) {
+			case ARRAY:
+				Code.put(Code.arraylength);
+				break;
+			case SET:
+				Code.loadConst(0);
+				Code.put(Code.aload);
+				break;
+			default:
+				throw new IllegalArgumentException("Unsupported data structure " + dataStructure);
+		}
 	}
 	
 	/**
-	 * Expected stack: ..., setAdr, index
+	 * Expected stack: ..., dsAdr, index
 	 * <br>
 	 * Returned stack: ..., elem
 	 */
-	public static void setGetElem() {
-		Code.addNum(1);
-		Code.put(Code.aload);
+	public static void getElem(DataStructure dataStructure) {
+		switch (dataStructure) {
+			case ARRAY:
+				Code.put(Code.aload);
+				break;
+			case SET:
+				Code.addNum(1);
+				Code.put(Code.aload);
+				break;
+			default:
+				throw new IllegalArgumentException("Unsupported data structure " + dataStructure);
+		}
+	}
+	
+	/**
+	 * Expected stack: ..., dsAdr, index, elem
+	 * <br>
+	 * Returned stack: ...
+	 */
+	public static void setElem(DataStructure dataStructure) {
+		switch (dataStructure) {
+			case ARRAY:
+				Code.put(Code.astore);
+				break;
+			case SET:
+				Code.swap(0, 1); // dsAdr, elem, index
+				Code.addNum(1);
+				Code.swap(0, 1); // dsAdr, index + 1, elem
+				Code.put(Code.astore);
+				break;
+			default:
+				throw new IllegalArgumentException("Unsupported data structure " + dataStructure);
+		}
+	}
+	
+	/**
+	 * Expected stack: ..., dsAdr, index1, index2
+	 * <br>
+	 * Returned stack: ...
+	 */
+	public static void swapElem(DataStructure dataStructure) {
+		Code.log();
+		Obj index2 = Tab.insertTemp(Tab.intType); // dsAdr, index1, index2
+		Code.store(index2); // dsAdr, index1
+		Obj index1 = Tab.insertTemp(Tab.intType); // dsAdr, index1
+		Code.store(index1); // dsAdr
+		
+		Code.put(Code.dup); // dsAdr, dsAdr
+		Code.load(index1); // dsAdr, dsAdr, index1
+		
+		Code.getElem(dataStructure); // dsAdr, elem1
+		Code.swap(0, 1); // elem1, dsAdr
+		Code.dupli(0); // elem1, dsAdr, dsAdr
+		Code.dupli(0); // elem1, dsAdr, dsAdr, dsAdr
+		Code.load(index2); // elem1, dsAdr, dsAdr, dsAdr, index2
+		Code.getElem(dataStructure); // elem1, dsAdr, dsAdr, elem2
+		Code.load(index1); // elem1, dsAdr, dsAdr, elem2, index1
+		Code.swap(0, 1); // elem1, dsAdr, dsAdr, index1, elem2
+		Code.setElem(dataStructure); // elem1, dsAdr
+		Code.load(index2); // elem1, dsAdr, index2
+		Code.swap(1, 0, 2); // dsAdr, index2, elem1
+		Code.setElem(dataStructure); // ...
+		
+		Code.log();
+		
+		Tab.free(index1);
+		Tab.free(index2);
 	}
 	
 	/**
@@ -132,7 +210,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 			Code.swap(1, 0, 2); // elem, index, setAdr
 			Code.dupli(0); // elem, index, setAdr, setAdr
 			Code.swap(0, 2); // elem, setAdr, setAdr, index
-			Code.setGetElem(); // elem, setAdr, currElem
+			Code.getElem(DataStructure.SET); // elem, setAdr, currElem
 			Code.swap(1, 2); // setAdr, elem, currElem
 			Code.dupli(1); // setAdr, elem, currElem, elem
 			
@@ -152,11 +230,13 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		Code.put(Code.astore); // setAdr, elem
 		
 		Code.dupli(1); // setAdr, elem, setAdr
+		Code.dupli(0); // setAdr, elem, setAdr, setAdr
+		Code.getSize(DataStructure.SET); // setAdr, elem, setAdr, setSize
+		Code.swap(1, 0, 2); // setAdr, setAdr, setSize, elem
 		
-		Code.getSize(DataStructure.SET); // setAdr, elem, setSize
-		Code.swap(0, 1); // setAdr, setSize, elem
+		Code.put(Code.astore); // setAdr
 		
-		Code.put(Code.astore); // ...
+		Code.sort(DataStructure.SET);
 		
 		jm.setLabel("end");
 	}
@@ -295,42 +375,57 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * <br>
 	 * Returned stack: ...
 	 */
-	public static void sortSet() {
-		JumpManager jm = new JumpManager();
-		
-		Obj temp = Tab.insertTemp(Tab.setType); // setAdr
+	public static void sort(DataStructure dataStructure) {
+		Obj temp = Tab.insertTemp(Tab.intType);
+		Code.log();
 		Code.store(temp); // ...
 		
 		Code.load(temp); // setAdr
-		Code.getSize(DataStructure.SET); // setSize
+		Code.getSize(dataStructure); // setSize
 		Code.addNum(-1); // setSize - 1
+		
 		Code.For(() -> { // indexI
+			Code.log();
 			Code.load(temp); // indexI, setAdr
-			Code.getSize(DataStructure.SET); // indexI, setSize
+			Code.getSize(dataStructure); // indexI, setSize
 			Code.dupli(1); // indexI, setSize, indexI
 			Code.addNum(1); // indexI, setSize, indexI + 1
+			
 			Code.ForFromTo(() -> { // indexI, indexJ
-				Code.put(Code.dup2); // indexI, indexJ, indexI, indexJ
-				Code.load(temp); // indexI, indexJ, indexI, indexJ, setAdr
-				Code.swap(0, 1); // indexI, indexJ, indexI, setAdr, indexJ
-				Code.setGetElem(); // indexI, indexJ, indexI, elemJ
-				Code.swap(0, 1); // indexI, indexJ, elemJ, indexI
-			})
+				Code.log();
+				Code.dupli(1); // indexI, indexJ, indexI
+				Code.load(temp); // indexI, indexJ, indexI, setAdr
+				Code.swap(0, 1); // indexI, indexJ, setAdr, indexI
+				Code.getElem(dataStructure); // indexI, indexJ, elemI
+				Code.dupli(1); // indexI, indexJ, elemI, indexJ
+				Code.load(temp); // indexI, indexJ, elemI, indexJ, setAdr
+				Code.swap(0, 1); // indexI, indexJ, elemI, setAdr, indexJ
+				Code.getElem(dataStructure); // indexI, indexJ, elemI, elemJ
+				
+				Code.If(Code.gt, () -> { // indexI, indexJ
+					Code.dupli(1); // indexI, indexJ, indexI
+					Code.load(temp); // indexI, indexJ, indexI, setAdr
+					Code.swap(0, 2); // indexI, setAdr, indexI, indexJ
+					Code.swapElem(dataStructure);
+				}).Else(() -> {
+					Code.put(Code.pop); // indexI
+				});
+			});
+			
+			Code.put(Code.pop); // ...
 		});
 		
 		Tab.free(temp);
 	}
 	
-	/**
-	 * Expected stack: ..., setAdr1, index1, setAdr2, index2
-	 * <br>
-	 * Returned stack: ...
-	 */
-	public static void swapSet() {
-	
-	}
-	
 	public static void log() {
+		StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+		// Index 0 is getStackTrace, 1 is log(), so 2 is the caller
+		if (stackTrace.length > 2) {
+			StackTraceElement caller = stackTrace[2];
+			analyzer.report_info(null, "Log value '" + printConst + "' belongs to line '" + caller.getLineNumber() + "'");
+		}
+		
 		Code.loadConst(printConst++);
 		Code.put(Code.pop);
 	}

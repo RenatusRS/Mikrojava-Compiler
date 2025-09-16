@@ -37,6 +37,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 				new AbstractMap.SimpleEntry<>("aa", Tab.setType)
 		));
 		
+		addMethod("sort", Tab.noType, Collections.singletonList(
+				new AbstractMap.SimpleEntry<>("aa", new Struct(Struct.Array, Tab.intType))
+		));
+		
 		addMethod("ifTest", Tab.noType, Collections.emptyList());
 		addMethod("forTest", Tab.noType, Collections.emptyList());
 		
