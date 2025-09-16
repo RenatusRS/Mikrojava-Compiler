@@ -10,7 +10,7 @@ import java.util.*;
 
 public class SemanticAnalyzer extends VisitorAdaptor {
 	
-	private final Analyzer analyzer = Analyzer.getInstance(MJParser.class);
+	private final Analyzer analyzer = Analyzer.getInstance();
 	private final Stack<List<Struct>> methodCalls = new Stack<>();
 	private final HashMap<Obj, List<Struct>> methods = new HashMap<>();
 	private Obj currentMethod = Tab.noObj;

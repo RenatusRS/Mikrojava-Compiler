@@ -8,6 +8,11 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	
 	public static final int eol = 10;
 	
+	enum DataStructure {
+		ARRAY,
+		SET
+	}
+	
 	public static void swap(int pos1, int pos2) {
 		if (pos1 == pos2) {
 			return; // No need to swap if positions are the same
@@ -97,7 +102,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * <br>
 	 * Returned stack: ..., setSize
 	 */
-	public static void setGetSize() {
+	public static void getSize(DataStructure dataStructure) {
 		Code.loadConst(0);
 		Code.put(Code.aload);
 	}
@@ -121,7 +126,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		JumpManager jm = new JumpManager();
 		
 		Code.dupli(1); // setAdr, elem, setAdr 4 5 4
-		Code.setGetSize(); // setAdr, elem, setSize 4 5 0
+		Code.getSize(DataStructure.SET); // setAdr, elem, setSize 4 5 0
 		
 		Code.For(() -> { // setAdr, elem, index
 			Code.swap(1, 0, 2); // elem, index, setAdr
@@ -142,13 +147,13 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		Code.dupli(1); // setAdr, elem, setAdr
 		Code.loadConst(0); // setAdr, elem, setAdr, 0
 		Code.dupli(1); // setAdr, elem, setAdr, 0, setAdr
-		Code.setGetSize(); // setAdr, elem, setAdr, 0, setSize
+		Code.getSize(DataStructure.SET); // setAdr, elem, setAdr, 0, setSize
 		Code.addNum(1); // setAdr, elem, setAdr, 0, setSize + 1
 		Code.put(Code.astore); // setAdr, elem
 		
 		Code.dupli(1); // setAdr, elem, setAdr
 		
-		Code.setGetSize(); // setAdr, elem, setSize
+		Code.getSize(DataStructure.SET); // setAdr, elem, setSize
 		Code.swap(0, 1); // setAdr, setSize, elem
 		
 		Code.put(Code.astore); // ...
@@ -192,7 +197,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * Pushes current loop index to the stack for the runnable action.
 	 */
 	public static void For(Runnable action) {
-		For(action, 1);
+		For(1, action);
 	}
 	
 	/**
@@ -200,9 +205,9 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * <br>
 	 * Pushes current loop index to the stack for the runnable action.
 	 */
-	public static void For(Runnable action, int step) {
+	public static void For(int step, Runnable action) {
 		Code.loadConst(0);
-		ForFromTo(action, step);
+		ForFromTo(step, action);
 	}
 	
 	/**
@@ -211,7 +216,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * Pushes current loop index to the stack for the runnable action.
 	 */
 	public static void ForFromTo(Runnable action) {
-		ForFromTo(action, 1);
+		ForFromTo(1, action);
 	}
 	
 	/**
@@ -219,11 +224,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 	 * <br>
 	 * Pushes current loop index to the stack for the runnable action.
 	 */
-	public static void ForFromTo(Runnable action, int step) {
-		if (step == 0) {
-			throw new IllegalArgumentException("Step cannot be 0");
-		}
-		
+	public static void ForFromTo(int step, Runnable action) {
 		JumpManager jm = new JumpManager();
 		
 		Obj from = Tab.insertTemp(Tab.intType);
@@ -269,8 +270,7 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		Code.If(Code.lt, () -> { // elem1, elem2
 			Code.put(Code.pop); // elem1
 		}).Else(() -> {
-			Code.put(Code.dup_x1); // elem2, elem1, elem2
-			Code.put(Code.pop); // elem2, elem1
+			Code.swap(0, 1); // elem2, elem1
 			Code.put(Code.pop); // elem2
 		});
 	}
@@ -285,10 +285,49 @@ public class Code extends rs.etf.pp1.mj.runtime.Code {
 		Code.If(Code.gt, () -> { // elem1, elem2
 			Code.put(Code.pop); // elem1
 		}).Else(() -> {
-			Code.put(Code.dup_x1); // elem2, elem1, elem2
-			Code.put(Code.pop); // elem2, elem1
-			Code.put(Code.pop); // elem2
+			Code.swap(0, 1); // elem2, elem1
+			Code.put(Code.pop);
 		});
+	}
+	
+	/**
+	 * Expected stack: ..., setAdr
+	 * <br>
+	 * Returned stack: ...
+	 */
+	public static void sortSet() {
+		JumpManager jm = new JumpManager();
+		
+		Obj temp = Tab.insertTemp(Tab.setType); // setAdr
+		Code.store(temp); // ...
+		
+		Code.load(temp); // setAdr
+		Code.getSize(DataStructure.SET); // setSize
+		Code.addNum(-1); // setSize - 1
+		Code.For(() -> { // indexI
+			Code.load(temp); // indexI, setAdr
+			Code.getSize(DataStructure.SET); // indexI, setSize
+			Code.dupli(1); // indexI, setSize, indexI
+			Code.addNum(1); // indexI, setSize, indexI + 1
+			Code.ForFromTo(() -> { // indexI, indexJ
+				Code.put(Code.dup2); // indexI, indexJ, indexI, indexJ
+				Code.load(temp); // indexI, indexJ, indexI, indexJ, setAdr
+				Code.swap(0, 1); // indexI, indexJ, indexI, setAdr, indexJ
+				Code.setGetElem(); // indexI, indexJ, indexI, elemJ
+				Code.swap(0, 1); // indexI, indexJ, elemJ, indexI
+			})
+		});
+		
+		Tab.free(temp);
+	}
+	
+	/**
+	 * Expected stack: ..., setAdr1, index1, setAdr2, index2
+	 * <br>
+	 * Returned stack: ...
+	 */
+	public static void swapSet() {
+	
 	}
 	
 	public static void log() {

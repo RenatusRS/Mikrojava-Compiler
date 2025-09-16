@@ -13,7 +13,7 @@ import java.util.Map;
 public class Tab extends rs.etf.pp1.symboltable.Tab {
 	public static final Struct boolType = new Struct(Struct.Bool);
 	public static final Struct setType = new Struct(Struct.Enum);
-	private static final Analyzer analyzer = Analyzer.getInstance(MJParser.class);
+	private static final Analyzer analyzer = Analyzer.getInstance();
 	private static int tempAdr = 100;
 	
 	public static void init() {

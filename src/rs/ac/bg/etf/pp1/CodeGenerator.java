@@ -11,7 +11,7 @@ import java.util.Stack;
 
 public class CodeGenerator extends VisitorAdaptor {
 	
-	private final Analyzer analyzer = new Analyzer(MJParser.class);
+	private final Analyzer analyzer = Analyzer.getInstance();
 	
 	public void compile(Program program) throws Exception {
 		File objFile = new File("test/program.obj");
@@ -69,7 +69,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		addFunc("minSet", 1, 0, () -> {
 			Code.put(Code.load_n); // Set address
 			Code.put(Code.dup); // setAdr, setAdr
-			Code.setGetSize(); // setAdr, setSize
+			Code.getSize(Code.DataStructure.SET); // setAdr, setSize
 			Code.loadConst(999); // setAdr, setSize, currMin
 			
 			Code.swap(0, 1); // setAdr, currMin, setSize
@@ -110,8 +110,9 @@ public class CodeGenerator extends VisitorAdaptor {
 		addFunc("forTest", 0, 0, () -> {
 			Code.loadConst(5);
 			Code.For(() -> { // index1
-				Code.loadConst(10);
-				Code.For(() -> { // index1, index2
+				Code.loadConst(5);
+				Code.loadConst(9);
+				Code.ForFromTo(-1, () -> { // index1, index2
 					Code.loadConst(7);
 					Code.For(() -> { // index1, index2, index3
 						Code.loadConst(1);
@@ -182,7 +183,7 @@ public class CodeGenerator extends VisitorAdaptor {
 			analyzer.report_info(printStatementOptional, "CODE LOAD PRINT NO WIDTH CONST: 1");
 			
 			Code.put(Code.dup); // setAdr, setAdr
-			Code.setGetSize(); // setAdr, setSize
+			Code.getSize(Code.DataStructure.SET); // setAdr, setSize
 			Code.For(() -> { // setAdr, index
 				Code.dupli(1); // setAdr, index, setAdr
 				Code.swap(0, 1); // setAdr, setAdr, index
@@ -471,9 +472,9 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.swap(0, 1); // ..., set1, set2
 		Code.put(Code.dup2); // ..., set1, set2, set1, set2
 		
-		Code.setGetSize(); // ..., set1, set2, set1, sizeSet2
+		Code.getSize(Code.DataStructure.SET); // ..., set1, set2, set1, sizeSet2
 		Code.swap(0, 1); // ..., set1, set2, sizeSet2, set1
-		Code.setGetSize(); // ..., set1, set2, sizeSet2, sizeSet1
+		Code.getSize(Code.DataStructure.SET); // ..., set1, set2, sizeSet2, sizeSet1
 		
 		Code.put(Code.add); // ..., set1, set2, sizeSet1 + sizeSet2
 		Code.loadConst(1);
@@ -484,7 +485,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.swap(0, 1); // ..., set1, newSet, set2
 		
 		Code.dupli(0); // ..., set1, newSet, set2, set2
-		Code.setGetSize(); // ..., set1, newSet, set2, sizeSet2
+		Code.getSize(Code.DataStructure.SET); // ..., set1, newSet, set2, sizeSet2
 		Code.For(() -> { // ..., set1, newSet, set2, index);
 			Code.dupli(1); // ..., set1, newSet, set2, index, set2
 			Code.swap(0, 1); // ..., set1, newSet, set2, set2, index
@@ -500,7 +501,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(Code.pop); // set1, newSet
 		
 		Code.dupli(1); // set1, newSet, set1
-		Code.setGetSize(); // set1, newSet, sizeSet1
+		Code.getSize(Code.DataStructure.SET); // set1, newSet, sizeSet1
 		Code.swap(1, 2); // newSet, set1, sizeSet1
 		Code.For(() -> { // newSet, set1, index
 			Code.dupli(1); // newSet, set1, index, set1

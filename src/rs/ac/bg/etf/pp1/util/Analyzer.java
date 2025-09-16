@@ -1,8 +1,10 @@
 package rs.ac.bg.etf.pp1.util;
 
 import org.apache.log4j.Logger;
+import rs.ac.bg.etf.pp1.MJParser;
 import rs.ac.bg.etf.pp1.Tab;
 import rs.ac.bg.etf.pp1.ast.SyntaxNode;
+import rs.etf.pp1.mj.runtime.Code;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
@@ -12,15 +14,15 @@ public class Analyzer {
 	private boolean errorDetected = false;
 	private final Logger logger;
 	
-	public Analyzer(Class clazz) {
-		logger = Logger.getLogger(clazz);
+	public Analyzer() {
+		logger = Logger.getLogger(MJParser.class);
 	}
 	
 	private static Analyzer instance = null;
 	
-	public static Analyzer getInstance(Class clazz) {
+	public static Analyzer getInstance() {
 		if (instance == null) {
-			instance = new Analyzer(clazz);
+			instance = new Analyzer();
 		}
 		return instance;
 	}
@@ -44,10 +46,10 @@ public class Analyzer {
 		}
 		
 		if (info == null) {
-			return "Built-In: " + message;
+			return "(Built-In, PC " + Code.pc + ") " + message;
 		}
 		
-		return "Line " + info.getLine() + " [" + parentInfo + info.getClass().getSimpleName() + "]: " + message;
+		return "(Line " + info.getLine() + ", PC " + Code.pc + ") [" + parentInfo + info.getClass().getSimpleName() + "]: " + message;
 	}
 	
 	public void report_error(SyntaxNode info, String message) {
